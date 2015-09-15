@@ -1,0 +1,97 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{DE499DB9-B504-4A16-9EE2-E20CF2AEE8A0}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>PdbReader</RootNamespace>
+    <AssemblyName>PdbReader</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Dia2Lib">
+      <HintPath>.\Dia2Lib.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Collect\AnonymousStruct.cs" />
+    <Compile Include="Collect\AnonymousUnion.cs" />
+    <Compile Include="Collect\Collector.cs" />
+    <Compile Include="Collect\Column.cs" />
+    <Compile Include="Collect\Columns.cs" />
+    <Compile Include="Collect\ColumnStack.cs" />
+    <Compile Include="Collect\LeafMember.cs" />
+    <Compile Include="Collect\LeafMembers.cs" />
+    <Compile Include="Collect\Member.cs" />
+    <Compile Include="Collect\Offset.cs" />
+    <Compile Include="Collect\TreeMember.cs" />
+    <Compile Include="Defs\Def.cs" />
+    <Compile Include="Defs\DefFactory.cs" />
+    <Compile Include="Defs\MixedTypedef.cs" />
+    <Compile Include="Defs\PureDef.cs" />
+    <Compile Include="Defs\Typedef.cs" />
+    <Compile Include="DiaExtra\BaseType.cs" />
+    <Compile Include="DiaExtra\LocationType.cs" />
+    <Compile Include="IntTypePair.cs" />
+    <Compile Include="IntTypePairs.cs" />
+    <Compile Include="PrimTypes.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Translator.cs" />
+    <Compile Include="Types\CArr.cs" />
+    <Compile Include="Types\CBrace.cs" />
+    <Compile Include="Types\CEnum.cs" />
+    <Compile Include="Types\CFunc.cs" />
+    <Compile Include="Types\CPrefix.cs" />
+    <Compile Include="Types\CPrim.cs" />
+    <Compile Include="Types\CPtr.cs" />
+    <Compile Include="Types\CStruct.cs" />
+    <Compile Include="Types\CTerm.cs" />
+    <Compile Include="Types\CTree.cs" />
+    <Compile Include="Types\CType.cs" />
+    <Compile Include="Types\CTypeRef.cs" />
+    <Compile Include="Types\CUnion.cs" />
+    <Compile Include="Types\CWrap.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
