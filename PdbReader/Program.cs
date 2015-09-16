@@ -38,8 +38,23 @@ namespace PdbReader
 
             Console.Write(new DefFactory().CreateMixedTypedef(s1, "ENTRY").Output("....", TAB));
         }
+        static void TypesTest2()
+        {
+            SortedSet<TypeAttr> attrs = new SortedSet<TypeAttr>();
+            // attrs.Add(TypeAttrs.Volatile);
+            attrs.Add(TypeAttrs.Const);
+
+            CStruct s1 = new CStruct();
+            s1.Add(PrimTypes.INT, "a");
+            s1.Add(PrimTypes.INT, "b");
+
+            CType t1 = new CAttrTerm(s1, attrs);
+            Console.WriteLine(t1.Define("v", "....", "    "));
+        }
         static void Main(string[] args)
         {
+            TypesTest2();
+            Environment.Exit(0);
             // const string filePath = @"E:\DebuggingSymbols\ntdll.pdb\DDC94C54F06040619595D2473D92AB911\ntdll.pdb";
             const string filePath = @"F:\GuBigCollect\Tests_PDB\T06_DIA_T02\Debug\T06_DIA_T02.pdb";
             IDiaDataSource source = new DiaSource();

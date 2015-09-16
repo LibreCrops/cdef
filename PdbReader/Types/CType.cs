@@ -45,19 +45,36 @@ namespace PdbReader.Types
             s2 = indent + core2.PartDef(indent, tab);
             return s2 + MaybeSpace(s1) + ";\n";
         }
+        private string TryGetPrefix(CType t)
+        {
+            string s;
+            try
+            {
+                if (t is CAttrTerm)
+                {
+                    CAttrTerm t2 = (CAttrTerm)t;
+                    s = t2.AttrStr + " " + ((CPrefix)t2.CoreType).Prefix;
+                }
+                else
+                {
+                    s = ((CPrefix)t).Prefix;
+                }
+            }
+            catch (InvalidCastException)
+            {
+                throw new InvalidOperationException();
+            }
+            return s;
+        }
         public string Sig
         {
             get
             {
-                CType core1;
-                CPrefix core2;
+                CType core;
                 string s1, s2;
 
-                s1 = Wrap("", out core1);
-                Debug.Assert(core1 is CPrefix);
-
-                core2 = (CPrefix)core1;
-                s2 = core2.Prefix;
+                s1 = Wrap("", out core);
+                s2 = TryGetPrefix(core);
                 return s2 + MaybeSpace(s1);
             }
         }

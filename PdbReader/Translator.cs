@@ -29,6 +29,7 @@ namespace PdbReader
                     return TranslateFunc(sym);
                 
                 case SymTagEnum.SymTagUDT:
+                    // FIXME: does this UDT has a name?
                     return TranslateUDT(sym);
 
                 default:
