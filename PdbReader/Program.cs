@@ -40,14 +40,15 @@ namespace PdbReader
         }
         static void Main(string[] args)
         {
+            const string filePath = @"E:\DebuggingSymbols\ntdll.pdb\DDC94C54F06040619595D2473D92AB911\ntdll.pdb";
             IDiaDataSource source = new DiaSource();
             IDiaSession session;
-            source.loadDataFromPdb(@"F:\GuBigCollect\Tests_PDB\T08_AlgoPort1\Debug\T08_AlgoPort1.pdb");
+            source.loadDataFromPdb(filePath);
             source.openSession(out session);
 
             IDiaSymbol global = session.globalScope;
             IDiaEnumSymbols enumSymbols;
-            global.findChildren(SymTagEnum.SymTagUDT, "_Data2", 0, out enumSymbols);
+            global.findChildren(SymTagEnum.SymTagUDT, "_PEB", 0, out enumSymbols);
 
             IDiaSymbol struct1 = enumSymbols.Item(0);
             struct1.findChildren(SymTagEnum.SymTagData, null, 0, out enumSymbols);

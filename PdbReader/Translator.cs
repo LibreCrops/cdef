@@ -27,6 +27,9 @@ namespace PdbReader
 
                 case SymTagEnum.SymTagFunctionType:
                     return TranslateFunc(sym);
+                
+                case SymTagEnum.SymTagUDT:
+                    return TranslateUDT(sym);
 
                 default:
                     return new CPrim("NotImpl");
@@ -112,6 +115,21 @@ namespace PdbReader
         public CStruct TranslateStruct2(IDiaEnumSymbols symbols)
         {
             return new Collector(this).CollectStruct(symbols);
+        }
+        private string InternName(string name)
+        {
+            if (name.StartsWith("_"))
+            {
+                return name.Substring(1);
+            }
+            else
+            {
+                return name;
+            }
+        }
+        public CType TranslateUDT(IDiaSymbol sym)
+        {
+            return new CTypeRef(InternName(sym.name));
         }
     }
 }
