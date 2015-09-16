@@ -88,6 +88,20 @@ namespace PdbReader
             }
             return res;
         }
+        public CBits TranslateBitField(IDiaSymbol sym)
+        {
+            return new CBits(TranslateBaseType(sym.type), (int)sym.length);
+        }
+        private bool IsBitField(IDiaSymbol sym)
+        {
+            return (LocationTypeEnum)sym.locationType == LocationTypeEnum.LocIsBitField;
+        }
+        public CType TranslateMember(IDiaSymbol subSym)
+        {
+            return IsBitField(subSym)
+                ? TranslateBitField(subSym)
+                : Translate(subSym.type);
+        }
         public CStruct TranslateStruct(IDiaSymbol sym)
         {
             IDiaEnumSymbols symbols;
@@ -105,8 +119,9 @@ namespace PdbReader
                 }
 
                 string name = subSym.name;
-                CType type = Translate(subSym.type);
+                CType type = TranslateMember(subSym);
                 res.Add(type, name);
+
                 lastOffset = thisOffset;
             }
 

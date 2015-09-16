@@ -27,7 +27,7 @@ namespace PdbReader.Collect
 
         public override CType ToCType(Translator translator)
         {
-            return translator.Translate(_symbol.type);
+            return translator.TranslateMember(_symbol);
         }
         public override string Name
         {
