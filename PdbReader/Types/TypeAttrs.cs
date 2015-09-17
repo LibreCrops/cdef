@@ -7,7 +7,8 @@ namespace PdbReader.Types
 {
     class TypeAttrs
     {
-        public static TypeAttr Const = new TypeAttr("const", -2);
-        public static TypeAttr Volatile = new TypeAttr("volatile", -1);
+        public static TypeAttr Unaligned    = new TypeAttr("__unaligned", -3);
+        public static TypeAttr Const        = new TypeAttr("const", -2);
+        public static TypeAttr Volatile     = new TypeAttr("volatile", -1);
     }
 }

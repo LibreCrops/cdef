@@ -21,5 +21,8 @@ namespace PdbReader
         public static CPrim USHORT      = new CPrim("unsigned short");
         public static CPrim ULONG       = new CPrim("unsigned long");
         public static CPrim ULONGLONG   = new CPrim("unsigned __int64");
+
+        public static CPrim FLOAT       = new CPrim("float");
+        public static CPrim DOUBLE      = new CPrim("double");
     }
 }

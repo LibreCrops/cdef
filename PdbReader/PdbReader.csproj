@@ -65,6 +65,7 @@
     <Compile Include="Defs\Typedef.cs" />
     <Compile Include="DiaExtra\BaseType.cs" />
     <Compile Include="DiaExtra\LocationType.cs" />
+    <Compile Include="DiaExtra\UdtKind.cs" />
     <Compile Include="IntTypePair.cs" />
     <Compile Include="IntTypePairs.cs" />
     <Compile Include="PrimTypes.cs" />

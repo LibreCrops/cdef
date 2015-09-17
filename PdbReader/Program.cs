@@ -53,10 +53,8 @@ namespace PdbReader
         }
         static void Main(string[] args)
         {
-            TypesTest2();
-            Environment.Exit(0);
             // const string filePath = @"E:\DebuggingSymbols\ntdll.pdb\DDC94C54F06040619595D2473D92AB911\ntdll.pdb";
-            const string filePath = @"F:\GuBigCollect\Tests_PDB\T06_DIA_T02\Debug\T06_DIA_T02.pdb";
+            const string filePath = @"F:\GuBigCollect\Tests_PDB\T10_PR_01\Debug\T10_PR_01.pdb";
             IDiaDataSource source = new DiaSource();
             IDiaSession session;
             source.loadDataFromPdb(filePath);
@@ -64,7 +62,7 @@ namespace PdbReader
 
             IDiaSymbol global = session.globalScope;
             IDiaEnumSymbols enumSymbols;
-            global.findChildren(SymTagEnum.SymTagUDT, "NoNamedAndBF", 0, out enumSymbols);
+            global.findChildren(SymTagEnum.SymTagUDT, "_B", 0, out enumSymbols);
 
             IDiaSymbol struct1 = enumSymbols.Item(0);
             struct1.findChildren(SymTagEnum.SymTagData, null, 0, out enumSymbols);

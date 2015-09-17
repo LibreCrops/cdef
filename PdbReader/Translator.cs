@@ -29,14 +29,28 @@ namespace PdbReader
                     return TranslateFunc(sym);
                 
                 case SymTagEnum.SymTagUDT:
-                    // FIXME: does this UDT has a name?
-                    return TranslateUDT(sym);
+                    return IsUnnamed(sym)
+                        ? TranslateUnnamedUdt(sym)
+                        : TranslateUDT(sym);
 
                 default:
                     return new CPrim("NotImpl");
             }
         }
-        public CPrim TranslateBaseType(IDiaSymbol sym)
+        private bool IsUnnamed(IDiaSymbol sym)
+        {
+            return sym.name.Contains('<');
+        }
+        private CTerm WithAttr(CTerm type, IDiaSymbol sym)
+        {
+            SortedSet<TypeAttr> attrs = new SortedSet<TypeAttr>();
+            if (sym.constType == 1) { attrs.Add(TypeAttrs.Const); }
+            if (sym.volatileType == 1) { attrs.Add(TypeAttrs.Volatile); }
+            if (sym.unalignedType == 1) { attrs.Add(TypeAttrs.Unaligned); }
+
+            return attrs.Any() ? new CAttrTerm(type, attrs) : type;
+        }
+        public CPrim _TranslateBaseType(IDiaSymbol sym)
         {
             int size = (int)sym.length;
             switch ((BaseTypeEnum)sym.baseType)
@@ -59,9 +73,16 @@ namespace PdbReader
                 case BaseTypeEnum.btULong:
                     return PrimTypes.ULONG;
 
+                case BaseTypeEnum.btFloat:
+                    return sym.length == 4 ? PrimTypes.FLOAT : PrimTypes.FLOAT;
+
                 default:
                     return new CPrim("NotImpl_BaseType");
             }
+        }
+        public CTerm TranslateBaseType(IDiaSymbol sym)
+        {
+            return WithAttr(_TranslateBaseType(sym), sym);
         }
         public CPtr TranslatePtr(IDiaSymbol sym)
         {
@@ -146,6 +167,18 @@ namespace PdbReader
         public CType TranslateUDT(IDiaSymbol sym)
         {
             return new CTypeRef(InternName(sym.name));
+        }
+        public CType TranslateUnnamedUdt(IDiaSymbol sym)
+        {
+            switch ((UdtKindEnum)sym.udtKind)
+            {
+                case UdtKindEnum.UdtStruct:
+                    return TranslateStruct(sym);
+                case UdtKindEnum.UdtUnion:
+                    return new CPrim("NotImpl_Union");
+                default:
+                    return new CPrim("NotImpl_Udt");
+            }
         }
     }
 }
