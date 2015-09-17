@@ -164,11 +164,22 @@ namespace PdbReader
             CUnion res = new CUnion();
             foreach (IDiaSymbol subSym in symbols)
             {
+                Offset thisOffset = Offset.FromDiaSymbol(subSym);
+                if (!thisOffset.IsEqualTo(Offset.Zero))
+                {
+                    symbols.Reset();
+                    return TranslateUnion2(symbols);
+                }
+
                 string name = subSym.name;
                 CType type = TranslateMember(subSym);
                 res.Add(type, name);
             }
             return res;
+        }
+        public CUnion TranslateUnion2(IDiaEnumSymbols symbols)
+        {
+            return new Collector(this).CollectUnion(symbols);
         }
         private string InternName(string name)
         {

@@ -86,6 +86,10 @@ namespace PdbReader.Collect
             result.Add(CollectUnion(nextMembersIndex, resetterIndex, offset));
             return result;
         }
+        public AnonymousUnion CollectUnion()
+        {
+            return CollectUnion(_beginIndex, _resetters.Count - 1, Offset.Zero);
+        }
         public AnonymousUnion CollectUnion(int membersIndex, int resetterIndex, Offset offset)
         {
             AnonymousUnion result = new AnonymousUnion();

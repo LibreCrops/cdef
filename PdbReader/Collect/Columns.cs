@@ -34,6 +34,10 @@ namespace PdbReader.Collect
         {
             return _columns[0].CollectStruct();
         }
+        public AnonymousUnion CollectUnion()
+        {
+            return _columns[0].CollectUnion();
+        }
 
         IEnumerator IEnumerable.GetEnumerator()
         {

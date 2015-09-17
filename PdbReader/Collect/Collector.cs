@@ -48,5 +48,16 @@ namespace PdbReader.Collect
             struc.WriteOut();
  */
         }
+
+        public CUnion CollectUnion(IDiaEnumSymbols symbols)
+        {
+            LeafMembers allMembers = new LeafMembers(symbols);
+            Columns columns = allMembers.CalculateColumns();
+            columns.CalculateResetters();
+            AnonymousUnion union = columns.CollectUnion();
+            union.PostProcess();
+            union.SinglizeStructs();
+            return (CUnion)union.ToCType(_translator);
+        }
     }
 }

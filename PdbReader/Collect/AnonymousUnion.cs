@@ -32,6 +32,17 @@ namespace PdbReader.Collect
             lastStruct = last;
             return maxBottomOffset;
         }
+        public void PostProcessWithoutCut()
+        {
+            foreach (AnonymousStruct struc in _members)
+            {
+                struc.PostProcessWithoutCut();
+            }
+        }
+        public void PostProcess()
+        {
+            PostProcessWithoutCut();
+        }
         public void SinglizeStructs()
         {
             for (int i = 0; i < _members.Count; i++)

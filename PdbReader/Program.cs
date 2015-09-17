@@ -62,7 +62,7 @@ namespace PdbReader
 
             IDiaSymbol global = session.globalScope;
             IDiaEnumSymbols enumSymbols;
-            global.findChildren(SymTagEnum.SymTagUDT, "_C", 0, out enumSymbols);
+            global.findChildren(SymTagEnum.SymTagUDT, "_LARGE_INTEGER", 0, out enumSymbols);
 
             IDiaSymbol struct1 = enumSymbols.Item(0);
             struct1.findChildren(SymTagEnum.SymTagData, null, 0, out enumSymbols);
