@@ -62,7 +62,7 @@ namespace PdbReader
 
             IDiaSymbol global = session.globalScope;
             IDiaEnumSymbols enumSymbols;
-            global.findChildren(SymTagEnum.SymTagUDT, "_B", 0, out enumSymbols);
+            global.findChildren(SymTagEnum.SymTagUDT, "_C", 0, out enumSymbols);
 
             IDiaSymbol struct1 = enumSymbols.Item(0);
             struct1.findChildren(SymTagEnum.SymTagData, null, 0, out enumSymbols);
@@ -70,7 +70,7 @@ namespace PdbReader
             IDiaSymbol member1 = enumSymbols.Item(0);
 
             Translator t = new Translator();
-            CType t2 = t.TranslateStruct(struct1);
+            CType t2 = t.TranslateUnion(struct1);
 
             Console.Write(new DefFactory().CreatePureDef((CBrace)t2, "X").Output(DOT, TAB));
             

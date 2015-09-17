@@ -58,6 +58,9 @@ namespace PdbReader
                 case BaseTypeEnum.btVoid:
                     return PrimTypes.VOID;
 
+                case BaseTypeEnum.btChar:
+                    return PrimTypes.CHAR;
+                
                 // no handler for btWChar
                 // `wchar_t' will be compiled to ULONG
 
@@ -153,6 +156,20 @@ namespace PdbReader
         {
             return new Collector(this).CollectStruct(symbols);
         }
+        public CUnion TranslateUnion(IDiaSymbol sym)
+        {
+            IDiaEnumSymbols symbols;
+            sym.findChildren(SymTagEnum.SymTagData, null, 0, out symbols);
+
+            CUnion res = new CUnion();
+            foreach (IDiaSymbol subSym in symbols)
+            {
+                string name = subSym.name;
+                CType type = TranslateMember(subSym);
+                res.Add(type, name);
+            }
+            return res;
+        }
         private string InternName(string name)
         {
             if (name.StartsWith("_"))
@@ -175,7 +192,7 @@ namespace PdbReader
                 case UdtKindEnum.UdtStruct:
                     return TranslateStruct(sym);
                 case UdtKindEnum.UdtUnion:
-                    return new CPrim("NotImpl_Union");
+                    return TranslateUnion(sym);
                 default:
                     return new CPrim("NotImpl_Udt");
             }
