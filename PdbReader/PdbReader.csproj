@@ -53,6 +53,7 @@
     <Compile Include="Collect\Column.cs" />
     <Compile Include="Collect\Columns.cs" />
     <Compile Include="Collect\ColumnStack.cs" />
+    <Compile Include="Collect\HoleFiller.cs" />
     <Compile Include="Collect\LeafMember.cs" />
     <Compile Include="Collect\LeafMembers.cs" />
     <Compile Include="Collect\Member.cs" />

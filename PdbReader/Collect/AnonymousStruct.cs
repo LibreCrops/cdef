@@ -17,10 +17,7 @@ namespace PdbReader.Collect
                 AnonymousStruct lastStruct;
                 int beginIndex;
                 Offset maxBotOffset = union.PostProcessWithCut(out lastStruct, out beginIndex);
-                if (beginIndex >= 0)
-                {
-                    lastStruct.TransferMembers(beginIndex, this);
-                }
+                lastStruct.TransferMembers(beginIndex, this);
 
                 return maxBotOffset;
             }
@@ -49,7 +46,7 @@ namespace PdbReader.Collect
                     return i;
                 }
             }
-            return -1;
+            return _members.Count;
         }
         public Offset PostProcessWithCut(Offset cutOffset, out int cutIndex, out Offset botOffset)
         {

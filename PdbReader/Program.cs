@@ -53,8 +53,12 @@ namespace PdbReader
         }
         static void Main(string[] args)
         {
-            const string filePath = @"E:\DebuggingSymbols\ntdll.pdb\DDC94C54F06040619595D2473D92AB911\ntdll.pdb";
+
+            // Environment.Exit(0);
+
+            // const string filePath = @"E:\DebuggingSymbols\ntdll.pdb\DDC94C54F06040619595D2473D92AB911\ntdll.pdb";
             // const string filePath = @"F:\GuBigCollect\Tests_PDB\T10_PR_01\Debug\T10_PR_01.pdb";
+            const string filePath = @"F:\ntkrnlmp.pdb";
             IDiaDataSource source = new DiaSource();
             IDiaSession session;
             source.loadDataFromPdb(filePath);

@@ -70,8 +70,21 @@ namespace PdbReader.Collect
         {
             return a.IsLessThan(b) ? b : a;
         }
+        public static Offset Diff(Offset a, Offset b)
+        {
+            // assume a <= b
+            int bytes = b.Bytes - a.Bytes;
+            int bits = b.Bits - a.Bits;
+            if (bits < 0)
+            {
+                bits += 8;
+                bytes--;
+            }
+            return new Offset(bytes, bits);
+        }
 
-        public static Offset Neg = new Offset(-1);
-        public static Offset Zero = new Offset(0);
+        public static Offset Neg    = new Offset(-1);
+        public static Offset Zero   = new Offset(0);
+        public static Offset One    = new Offset(1);
     }
 }
