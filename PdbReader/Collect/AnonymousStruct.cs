@@ -16,17 +16,17 @@ namespace PdbReader.Collect
                 AnonymousUnion union = (AnonymousUnion)lastMember;
                 AnonymousStruct lastStruct;
                 int beginIndex;
-                Offset maxBottomOffset = union.PostProcessWithCut(out lastStruct, out beginIndex);
+                Offset maxBotOffset = union.PostProcessWithCut(out lastStruct, out beginIndex);
                 if (beginIndex >= 0)
                 {
                     lastStruct.TransferMembers(beginIndex, this);
                 }
 
-                return maxBottomOffset;
+                return maxBotOffset;
             }
             else
             {
-                return ((LeafMember)lastMember).BottomOffset;
+                return ((LeafMember)lastMember).BotOffset;
             }
         }
         public Offset PostProcessWithoutCut()
@@ -36,7 +36,7 @@ namespace PdbReader.Collect
 
         private int FindCutPoint(Offset offset)
         {
-            for (int i = 0; i < _members.Count; i++)
+            for (int i = 1; i < _members.Count; i++)
             {
                 Member member = _members[i];
                 Offset memberOffset = member.TopOffset;
@@ -46,18 +46,16 @@ namespace PdbReader.Collect
                 }
                 if (offset.IsLessThan(memberOffset))
                 {
-                    // TODO:
-                    //   seems getting last member's bottom offset is important
-                    //   to detect the gorge caused by aligning
-                    throw new InvalidOperationException();
+                    return i;
                 }
             }
             return -1;
         }
-        public Offset PostProcessWithCut(Offset cutOffset, out int cutIndex)
+        public Offset PostProcessWithCut(Offset cutOffset, out int cutIndex, out Offset botOffset)
         {
             Offset offset = PostProcess1();
             cutIndex = FindCutPoint(cutOffset);
+            botOffset = _members[cutIndex - 1].BotOffset;
             return offset;
         }
 
@@ -88,6 +86,11 @@ namespace PdbReader.Collect
         public override CTree CreateCType()
         {
             return new CStruct();
+        }
+
+        public override Offset BotOffset
+        {
+            get { throw new NotImplementedException(); }
         }
     }
 }

@@ -8,29 +8,36 @@ namespace PdbReader.Collect
 {
     class AnonymousUnion : TreeMember
     {
+        private Offset _botOffset;
         public Offset PostProcessWithCut(out AnonymousStruct lastStruct, out int beginIndex)
         {
             // just to satisfy c# compiler (can't you be smarter?)
             beginIndex = -1;
 
             AnonymousStruct last = (AnonymousStruct)_members.Last();
-            Offset maxBottomOffset = Offset.Zero;
+            Offset maxBotOffset = Offset.Zero;
             
             foreach (AnonymousStruct struc in _members)
             {
                 Offset offset;
                 if (object.ReferenceEquals(last, struc))
                 {
-                    offset = struc.PostProcessWithCut(maxBottomOffset, out beginIndex);
+                    Offset offsetBeforeCut;
+                    offset = struc.PostProcessWithCut(
+                        maxBotOffset,
+                        out beginIndex,
+                        out offsetBeforeCut
+                    );
+                    _botOffset = Offset.Max(maxBotOffset, offsetBeforeCut);
                 }
                 else
                 {
                     offset = struc.PostProcessWithoutCut();
                 }
-                maxBottomOffset = Offset.Max(offset, maxBottomOffset);
+                maxBotOffset = Offset.Max(offset, maxBotOffset);
             }
             lastStruct = last;
-            return maxBottomOffset;
+            return maxBotOffset;
         }
         public void PostProcessWithoutCut()
         {
@@ -59,6 +66,15 @@ namespace PdbReader.Collect
         public override CTree CreateCType()
         {
             return new CUnion();
+        }
+
+        public override Offset BotOffset
+        {
+            get { return _botOffset; }
+        }
+        public void SetBotOffset(Offset value)
+        {
+            _botOffset = value;
         }
     }
 }

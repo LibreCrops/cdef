@@ -43,6 +43,11 @@ namespace PdbReader.Collect
                     break;
                 case LocationTypeEnum.LocIsBitField:
                     obj.Bits += (int)symbol.length;
+                    while (obj.Bits >= 8)
+                    {
+                        obj.Bits -= 8;
+                        obj.Bytes++;
+                    }
                     break;
             }
             return obj;

@@ -9,6 +9,7 @@ namespace PdbReader.Collect
     abstract class Member
     {
         public abstract Offset TopOffset { get; }
+        public abstract Offset BotOffset { get; }
 
         public abstract CType ToCType(Translator translator);
         public abstract string Name { get; }

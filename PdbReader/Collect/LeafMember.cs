@@ -10,19 +10,21 @@ namespace PdbReader.Collect
     class LeafMember : Member
     {
         private IDiaSymbol _symbol;
-        private Offset _offset;
+        private Offset _top;
+        private Offset _bot;
         public LeafMember(IDiaSymbol symbol)
         {
             _symbol = symbol;
-            _offset = Offset.FromDiaSymbol(symbol);
+            _top = Offset.FromDiaSymbol(symbol);
+            _bot = Offset.BottomOffsetFromDiaSymbol(symbol);
         }
         public override Offset TopOffset
         {
-            get { return _offset; }
+            get { return _top; }
         }
-        public Offset BottomOffset
+        public override Offset BotOffset
         {
-            get { return Offset.BottomOffsetFromDiaSymbol(_symbol); }
+            get { return _bot; }
         }
 
         public override CType ToCType(Translator translator)
@@ -40,7 +42,7 @@ namespace PdbReader.Collect
                 string.Format(
                     "{0}{1,-6}{2}",
                     indent,
-                    "+" + _offset.Bytes,
+                    "+" + _top.Bytes,
                     _symbol.name
                 )
             );
