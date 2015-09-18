@@ -11,7 +11,6 @@ namespace PdbReader
 {
     class Translator
     {
-        private bool _translatingTree;
         public CType Translate(IDiaSymbol sym)
         {
             switch ((SymTagEnum)sym.symTag)

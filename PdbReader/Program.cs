@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Dia2Lib;
+using PdbReader.Collect;
 using PdbReader.Types;
 using PdbReader.Defs;
 
@@ -53,9 +54,6 @@ namespace PdbReader
         }
         static void Main(string[] args)
         {
-
-            // Environment.Exit(0);
-
             // const string filePath = @"E:\DebuggingSymbols\ntdll.pdb\DDC94C54F06040619595D2473D92AB911\ntdll.pdb";
             // const string filePath = @"F:\GuBigCollect\Tests_PDB\T10_PR_01\Debug\T10_PR_01.pdb";
             const string filePath = @"F:\ntkrnlmp.pdb";

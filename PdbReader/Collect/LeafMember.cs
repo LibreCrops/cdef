@@ -40,9 +40,9 @@ namespace PdbReader.Collect
         {
             Console.WriteLine(
                 string.Format(
-                    "{0}{1,-6}{2}",
+                    "{0}{1,-8}{2}",
                     indent,
-                    "+" + _top.Bytes,
+                    "+" + _top.ToString(),
                     _symbol.name
                 )
             );

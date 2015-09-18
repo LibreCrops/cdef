@@ -23,30 +23,8 @@ namespace PdbReader.Collect
             AnonymousStruct struc = columns.CollectStruct();
             struc.PostProcess();
             struc.SinglizeStructs();
+            struc.WriteOut();
             return (CStruct)struc.ToCType(_translator);
-
-/*
-            int i = 0;
-            foreach (Column col in columns)
-            {
-                Console.WriteLine("Column: " + i);
-                foreach(Column col2 in col.Resetters)
-                {
-                    Console.WriteLine("  " + col2.ToString());
-                }
-                i++;
-            }
-
-            struc = columns.CollectStruct();
-            Console.WriteLine("==========");
-            struc.WriteOut();
-            struc.PostProcess();
-            Console.WriteLine("==========");
-            struc.WriteOut();
-            struc.SinglizeStructs();
-            Console.WriteLine("==========");
-            struc.WriteOut();
- */
         }
 
         public CUnion CollectUnion(IDiaEnumSymbols symbols)

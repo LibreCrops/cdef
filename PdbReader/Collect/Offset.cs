@@ -9,17 +9,36 @@ namespace PdbReader.Collect
 {
     class Offset
     {
-        public int Bytes;
-        public int Bits;
+        private int _bytes;
+        private int _bits;
         public Offset(int bytes)
             : this(bytes, 0)
         {
         }
         public Offset(int bytes, int bits)
         {
-            Bytes = bytes;
-            Bits = bits;
+            _bytes = bytes;
+            _bits = bits;
+            Normalize();
         }
+        private void Normalize()
+        {
+            while (_bits >= 8)
+            {
+                _bits -= 8;
+                _bytes++;
+            }
+        }
+
+        public int Bytes
+        {
+            get { return _bytes; }
+        }
+        public int Bits
+        {
+            get { return _bits; }
+        }
+
         public static Offset FromDiaSymbol(IDiaSymbol sym)
         {
             switch ((LocationTypeEnum)sym.locationType)
@@ -39,15 +58,11 @@ namespace PdbReader.Collect
             switch ((LocationTypeEnum)symbol.locationType)
             {
                 case LocationTypeEnum.LocIsThisRel:
-                    obj.Bytes += (int)symbol.type.length;
+                    obj._bytes += (int)symbol.type.length;
                     break;
                 case LocationTypeEnum.LocIsBitField:
-                    obj.Bits += (int)symbol.length;
-                    while (obj.Bits >= 8)
-                    {
-                        obj.Bits -= 8;
-                        obj.Bytes++;
-                    }
+                    obj._bits += (int)symbol.length;
+                    obj.Normalize();
                     break;
             }
             return obj;
@@ -55,15 +70,15 @@ namespace PdbReader.Collect
 
         public bool IsEqualTo(Offset o)
         {
-            return this.Bytes == o.Bytes && this.Bits == o.Bits;
+            return this._bytes == o._bytes && this._bits == o._bits;
         }
         public bool IsLessThan(Offset o)
         {
-            return this.Bytes < o.Bytes || (this.Bytes == o.Bytes && this.Bits < o.Bits);
+            return this._bytes < o._bytes || (this._bytes == o._bytes && this._bits < o._bits);
         }
         public bool IsLessThanOrEqualTo(Offset o)
         {
-            return this.Bytes < o.Bytes || (this.Bytes == o.Bytes && this.Bits <= o.Bits);
+            return this._bytes < o._bytes || (this._bytes == o._bytes && this._bits <= o._bits);
         }
 
         public static Offset Max(Offset a, Offset b)
@@ -73,14 +88,26 @@ namespace PdbReader.Collect
         public static Offset Diff(Offset a, Offset b)
         {
             // assume a <= b
-            int bytes = b.Bytes - a.Bytes;
-            int bits = b.Bits - a.Bits;
+            int bytes = b._bytes - a._bytes;
+            int bits = b._bits - a._bits;
             if (bits < 0)
             {
                 bits += 8;
                 bytes--;
             }
             return new Offset(bytes, bits);
+        }
+
+        public override string ToString()
+        {
+            if (this._bits != 0)
+            {
+                return this._bytes + "." + this._bits;
+            }
+            else
+            {
+                return this._bytes + "";
+            }
         }
 
         public static Offset Neg    = new Offset(-1);
