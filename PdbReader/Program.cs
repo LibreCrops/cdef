@@ -6,6 +6,7 @@ using Dia2Lib;
 using PdbReader.Collect;
 using PdbReader.Types;
 using PdbReader.Defs;
+using PdbReader.Xml;
 
 namespace PdbReader
 {
@@ -52,8 +53,20 @@ namespace PdbReader
             CType t1 = new CAttrTerm(s1, attrs);
             Console.WriteLine(t1.Define("v", "....", "    "));
         }
+        static void XmlSerializeTest()
+        {
+            CWrap a = new CArr(PrimTypes.INT, 10);
+            AttrWrapMaker x = new AttrWrapMaker();
+            a.Accept(x);
+            new CFunc(PrimTypes.VOID).Accept(x);
+            new CPtr(a).Accept(x);
+            
+            Console.WriteLine('"' + x.Value + '"');
+        }
         static void Main(string[] args)
         {
+            XmlSerializeTest();
+            Environment.Exit(0);
             // const string filePath = @"E:\DebuggingSymbols\ntdll.pdb\DDC94C54F06040619595D2473D92AB911\ntdll.pdb";
             // const string filePath = @"F:\GuBigCollect\Tests_PDB\T10_PR_01\Debug\T10_PR_01.pdb";
             const string filePath = @"F:\ntkrnlmp.pdb";

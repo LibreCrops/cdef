@@ -17,5 +17,6 @@ namespace PdbReader.Types
             get { return _next; }
         }
         public abstract string Decorate(string s);
+        public abstract void Accept(IWrapVisitor visitor);
     }
 }

@@ -10,7 +10,6 @@ namespace PdbReader.Types
         public CPtr(CType next)
             : base(next)
         {
-            
         }
         public override string Decorate(string s)
         {
@@ -22,6 +21,10 @@ namespace PdbReader.Types
             {
                 return "*" + s;
             }
+        }
+        public override void Accept(IWrapVisitor visitor)
+        {
+            visitor.VisitPtr(this);
         }
     }
 }

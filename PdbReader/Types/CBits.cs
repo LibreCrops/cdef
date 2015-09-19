@@ -18,5 +18,9 @@ namespace PdbReader.Types
         {
             return s + " : " + _len;
         }
+        public override void Accept(IWrapVisitor visitor)
+        {
+            visitor.VisitBits(this);
+        }
     }
 }

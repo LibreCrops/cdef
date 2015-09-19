@@ -23,7 +23,6 @@ namespace PdbReader.Collect
             AnonymousStruct struc = columns.CollectStruct();
             struc.PostProcess();
             struc.SinglizeStructs();
-            struc.WriteOut();
             return (CStruct)struc.ToCType(_translator);
         }
 
