@@ -71,6 +71,11 @@
     <Compile Include="PrimTypes.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Translator.cs" />
     <Compile Include="Types\CArr.cs" />
     <Compile Include="Types\CAttrTerm.cs" />
@@ -94,6 +99,15 @@
     <Compile Include="Xml\AttrWrapMaker.cs" />
     <Compile Include="Xml\PartXmlWriter.cs" />
     <Compile Include="Xml\XmlMaker.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\MainHelp.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

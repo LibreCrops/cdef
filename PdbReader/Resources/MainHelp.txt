@@ -1,0 +1,6 @@
+usage: PdbReader file action [args]
+
+actions:
+list    output types list
+xml     output xml data
+def     output type definitions

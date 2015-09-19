@@ -70,8 +70,7 @@ namespace PdbReader
         }
         static void Main(string[] args)
         {
-            XmlSerializeTest();
-            Environment.Exit(0);
+            Console.Write(Resources.MainHelp);
             // const string filePath = @"E:\DebuggingSymbols\ntdll.pdb\DDC94C54F06040619595D2473D92AB911\ntdll.pdb";
             // const string filePath = @"F:\GuBigCollect\Tests_PDB\T10_PR_01\Debug\T10_PR_01.pdb";
             const string filePath = @"F:\ntkrnlmp.pdb";
@@ -90,10 +89,9 @@ namespace PdbReader
             IDiaSymbol member1 = enumSymbols.Item(0);
 
             Translator t = new Translator();
-            CType t2 = t.TranslateStruct(struct1);
+            CBrace t2 = t.TranslateStruct(struct1);
 
             Console.Write(new DefFactory().CreatePureDef((CBrace)t2, "X").Output(DOT, TAB));
-            
         }
     }
 }
