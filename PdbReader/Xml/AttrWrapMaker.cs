@@ -8,13 +8,12 @@ namespace PdbReader.Xml
 {
     class AttrWrapMaker : IWrapVisitor
     {
+        private XmlMaker _maker;
         private string _val;
-        private bool _hasBitField;
-        private int _bitFieldLen;
-        public AttrWrapMaker()
+        public AttrWrapMaker(XmlMaker maker)
         {
             _val = "";
-            _hasBitField = false;
+            _maker = maker;
         }
 
         public string Value
@@ -34,23 +33,12 @@ namespace PdbReader.Xml
 
         public void VisitFunc(CFunc func)
         {
-            // TODO
-            _val = " f " + 1 + _val;
+            _val = " f " + _maker.AddFunc(func) + _val;
         }
 
         public void VisitBits(CBits bits)
         {
-            _hasBitField = true;
-            _bitFieldLen = bits.Len;
-        }
-
-        public bool HasBitField
-        {
-            get { return _hasBitField; }
-        }
-        public int BitFieldLen
-        {
-            get { return _bitFieldLen; }
+            throw new InvalidOperationException();
         }
     }
 }

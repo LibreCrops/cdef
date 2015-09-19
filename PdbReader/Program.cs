@@ -56,9 +56,17 @@ namespace PdbReader
         static void XmlSerializeTest()
         {
             XmlMaker x = new XmlMaker();
-            x.WriteField(
-                new CTree.Entry(new CBits(PrimTypes.ULONG, 22), "bits", new Offset(0, 3))
-            );
+            CStruct struc = new CStruct();
+            struc.Add(new CArr(PrimTypes.INT, 10), "I");
+            struc.Add(new CPtr(PrimTypes.VOID), "am");
+            struc.Add(PrimTypes.DOUBLE, "a");
+
+            CFunc func = new CFunc(PrimTypes.VOID);
+            func.Add(new CPtr(PrimTypes.VOID));
+            struc.Add(new CPtr(func), "func");
+
+            x.AddNamed(struc, "What");
+            x.WriteResultTo(Console.OpenStandardOutput());
         }
         static void Main(string[] args)
         {
