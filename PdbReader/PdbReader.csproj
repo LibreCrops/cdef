@@ -92,6 +92,7 @@
     <Compile Include="Types\TypeAttr.cs" />
     <Compile Include="Types\TypeAttrs.cs" />
     <Compile Include="Xml\AttrWrapMaker.cs" />
+    <Compile Include="Xml\PartXmlWriter.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
