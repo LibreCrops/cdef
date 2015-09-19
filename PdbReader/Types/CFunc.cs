@@ -17,6 +17,10 @@ namespace PdbReader.Types
         {
             get { return _next; }
         }
+        public List<CType> Args
+        {
+            get { return _args; }
+        }
         public void Add(CType type)
         {
             _args.Add(type);

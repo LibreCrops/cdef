@@ -12,10 +12,16 @@ namespace PdbReader.Types
         {
             private CType _type;
             private string _name;
+            private Offset _offset;
             public Entry(CType type, string name)
+                : this(type, name, Offset.Zero)
+            {
+            }
+            public Entry(CType type, string name, Offset offset)
             {
                 _type = type;
                 _name = name;
+                _offset = offset;
             }
             public CType Type
             {
@@ -24,6 +30,10 @@ namespace PdbReader.Types
             public string Name
             {
                 get { return _name; }
+            }
+            public Offset Offset
+            {
+                get { return _offset; }
             }
         }
         public CTree()

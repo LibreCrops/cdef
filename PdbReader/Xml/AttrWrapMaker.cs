@@ -9,9 +9,12 @@ namespace PdbReader.Xml
     class AttrWrapMaker : IWrapVisitor
     {
         private string _val;
+        private bool _hasBitField;
+        private int _bitFieldLen;
         public AttrWrapMaker()
         {
             _val = "";
+            _hasBitField = false;
         }
 
         public string Value
@@ -37,7 +40,17 @@ namespace PdbReader.Xml
 
         public void VisitBits(CBits bits)
         {
-            throw new InvalidOperationException();
+            _hasBitField = true;
+            _bitFieldLen = bits.Len;
+        }
+
+        public bool HasBitField
+        {
+            get { return _hasBitField; }
+        }
+        public int BitFieldLen
+        {
+            get { return _bitFieldLen; }
         }
     }
 }

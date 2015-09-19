@@ -14,6 +14,11 @@ namespace PdbReader.Types
         {
             _len = len;
         }
+        public int Len
+        {
+            get { return _len; }
+        }
+
         public override string Decorate(string s)
         {
             return s + " : " + _len;

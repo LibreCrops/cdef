@@ -56,7 +56,7 @@
     <Compile Include="Collect\LeafMember.cs" />
     <Compile Include="Collect\LeafMembers.cs" />
     <Compile Include="Collect\Member.cs" />
-    <Compile Include="Collect\Offset.cs" />
+    <Compile Include="Offset.cs" />
     <Compile Include="Collect\TreeMember.cs" />
     <Compile Include="Defs\Def.cs" />
     <Compile Include="Defs\DefFactory.cs" />
@@ -93,6 +93,7 @@
     <Compile Include="Types\TypeAttrs.cs" />
     <Compile Include="Xml\AttrWrapMaker.cs" />
     <Compile Include="Xml\PartXmlWriter.cs" />
+    <Compile Include="Xml\XmlMaker.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

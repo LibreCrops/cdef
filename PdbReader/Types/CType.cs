@@ -8,6 +8,18 @@ namespace PdbReader.Types
 {
     abstract class CType
     {
+        public void UnwrapTo(IWrapVisitor visitor, out CTerm core)
+        {
+            CType t = this;
+            CWrap w;
+            while ((w = t as CWrap) != null)
+            {
+                w.Accept(visitor);
+                t = w.Next;
+            }
+            core = (CTerm)t;
+        }
+
         protected static string MaybeSpace(string s)
         {
             if (string.IsNullOrEmpty(s))

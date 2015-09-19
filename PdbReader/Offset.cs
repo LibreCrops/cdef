@@ -5,7 +5,7 @@ using System.Text;
 using Dia2Lib;
 using PdbReader.DiaExtra;
 
-namespace PdbReader.Collect
+namespace PdbReader
 {
     class Offset
     {

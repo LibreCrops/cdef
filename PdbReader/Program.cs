@@ -55,20 +55,10 @@ namespace PdbReader
         }
         static void XmlSerializeTest()
         {
-            PartXmlWriter w = new PartXmlWriter();
-            w.BeginElem("root");
-            w.AddAttr("date", "13");
-            w.BeginElem("child");
-            w.AddAttr("id", "1");
-            w.EndElem();
-            w.BeginElem("child");
-            w.AddAttr("id", "2");
-            w.BeginElem("sub_child");
-            w.EndElem();
-
-            w.EndElem();
-            w.EndElem();
-            Console.WriteLine(w.Text);
+            XmlMaker x = new XmlMaker();
+            x.WriteField(
+                new CTree.Entry(new CBits(PrimTypes.ULONG, 22), "bits", new Offset(0, 3))
+            );
         }
         static void Main(string[] args)
         {
