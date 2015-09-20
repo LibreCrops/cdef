@@ -1,4 +1,4 @@
-usage: PdbReader file action [args]
+usage: PdbReader action file [args]
 
 actions:
 list    output types list

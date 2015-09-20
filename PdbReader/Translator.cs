@@ -28,22 +28,18 @@ namespace PdbReader
                     return TranslateFunc(sym);
                 
                 case SymTagEnum.SymTagUDT:
-                    return IsUnnamed(sym)
+                    return PdbSymbol.IsUnnamed(sym)
                         ? TranslateUnnamedUdt(sym)
-                        : TranslateUDT(sym);
+                        : TranslateTypeRef(sym);
 
                 case SymTagEnum.SymTagEnum:
-                    return IsUnnamed(sym)
+                    return PdbSymbol.IsUnnamed(sym)
                         ? TranslateEnum(sym)
-                        : TranslateUDT(sym);
+                        : TranslateTypeRef(sym);
 
                 default:
                     throw new NotImplementedException();
             }
-        }
-        private bool IsUnnamed(IDiaSymbol sym)
-        {
-            return sym.name.Contains('<');
         }
         private CTerm WithAttr(CTerm type, IDiaSymbol sym)
         {
@@ -66,8 +62,6 @@ namespace PdbReader
                     return PrimTypes.CHAR;
                 case BaseTypeEnum.btWChar:
                     return PrimTypes.WCHAR;
-                // no handler for btWChar
-                // `wchar_t' will be compiled to ULONG
 
                 case BaseTypeEnum.btInt:
                     return IntTypePairs.SelectBySize(size).Signed;
@@ -197,7 +191,7 @@ namespace PdbReader
                 return name;
             }
         }
-        public CType TranslateUDT(IDiaSymbol sym)
+        public CType TranslateTypeRef(IDiaSymbol sym)
         {
             return new CTypeRef(InternName(sym.name));
         }
