@@ -10,6 +10,8 @@ namespace PdbReader
     {
         public static CPrim VOID        = new CPrim("void");
 
+        public static CPrim WCHAR       = new CPrim("wchar_t");
+
         public static CPrim CHAR        = new CPrim("char");
         public static CPrim INT         = new CPrim("int");
         public static CPrim SHORT       = new CPrim("short");

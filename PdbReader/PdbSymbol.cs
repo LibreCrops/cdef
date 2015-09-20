@@ -24,10 +24,13 @@ namespace PdbReader
         {
             return symbol.name.Contains('<');
         }
+        public static string InternName(string name)
+        {
+            return name.StartsWith("_") ? name.Substring(1) : name;
+        }
         public static string GetInternName(IDiaSymbol symbol)
         {
-            string name = symbol.name;
-            return name.StartsWith("_") ? name.Substring(1) : name;
+            return InternName(symbol.name);
         }
 
         public string Name

@@ -32,8 +32,13 @@ namespace PdbReader
                         ? TranslateUnnamedUdt(sym)
                         : TranslateUDT(sym);
 
+                case SymTagEnum.SymTagEnum:
+                    return IsUnnamed(sym)
+                        ? TranslateEnum(sym)
+                        : TranslateUDT(sym);
+
                 default:
-                    return new CPrim("NotImpl");
+                    throw new NotImplementedException();
             }
         }
         private bool IsUnnamed(IDiaSymbol sym)
@@ -59,7 +64,8 @@ namespace PdbReader
 
                 case BaseTypeEnum.btChar:
                     return PrimTypes.CHAR;
-                
+                case BaseTypeEnum.btWChar:
+                    return PrimTypes.WCHAR;
                 // no handler for btWChar
                 // `wchar_t' will be compiled to ULONG
 
@@ -79,7 +85,7 @@ namespace PdbReader
                     return sym.length == 4 ? PrimTypes.FLOAT : PrimTypes.FLOAT;
 
                 default:
-                    return new CPrim("NotImpl_BaseType");
+                    throw new NotImplementedException("BaseType");
             }
         }
         public CTerm TranslateBaseType(IDiaSymbol sym)

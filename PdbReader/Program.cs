@@ -55,6 +55,9 @@ namespace PdbReader
         }
         static void Main(string[] args)
         {
+            App a = new App(new string[] { "xml", @"F:\ntkrnlmp.pdb", "_PEBx" });
+            a.Run();
+            Environment.Exit(0);
             const string filePath = @"F:\ntkrnlmp.pdb";
             Pdb p1 = Pdb.Load(filePath);
             int count = 0;

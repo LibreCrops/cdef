@@ -67,6 +67,8 @@ namespace PdbReader.Xml
         {
             { PrimTypes.VOID,       "VOID" },
 
+            { PrimTypes.WCHAR,      "WCHAR" },
+
             { PrimTypes.CHAR,       "CHAR" },
             { PrimTypes.UCHAR,      "UCHAR" },
             { PrimTypes.SHORT,      "SHORT" },
