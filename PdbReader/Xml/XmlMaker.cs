@@ -2,13 +2,67 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.IO;
+using System.Xml;
 using PdbReader.Types;
 
 namespace PdbReader.Xml
 {
     class XmlMaker
     {
+        private XmlDocument _doc;
+        private XmlElement _args, _unnamed, _named;
+        private int _funcNum, _unnamedNum;
+
+        public XmlMaker()
+        {
+            _doc = new XmlDocument();
+            _doc.InsertBefore(
+                _doc.CreateXmlDeclaration("1.0", "utf-8", null),
+                _doc.DocumentElement);
+
+            XmlElement root = _doc.CreateElement("defs");
+            _doc.AppendChild(root);
+
+            _args = _doc.CreateElement("args");
+            root.AppendChild(_args);
+
+            _unnamed = _doc.CreateElement("unnamed");
+            root.AppendChild(_unnamed);
+
+            _named = _doc.CreateElement("named");
+            root.AppendChild(_named);
+
+            _funcNum = 0;
+            _unnamedNum = 0;
+
+        }
+        public void Save(System.IO.Stream stream)
+        {
+            _doc.Save(stream);
+        }
+        public void Save(string path)
+        {
+            _doc.Save(path);
+        }
+
+
+        private void AddAttr(XmlElement elem, string key, object val)
+        {
+            XmlAttribute attr = _doc.CreateAttribute(key);
+            attr.Value = val.ToString();
+            elem.Attributes.Append(attr);
+        }
+
+        private void AddChild(XmlElement elem, XmlElement child)
+        {
+            elem.AppendChild(child);
+        }
+
+        private XmlElement MakeElem(string tag)
+        {
+            return _doc.CreateElement(tag);
+        }
+
         private static Dictionary<CPrim, string> _primNames = new Dictionary<CPrim, string>()
         {
             { PrimTypes.VOID,       "VOID" },
@@ -28,36 +82,9 @@ namespace PdbReader.Xml
             { PrimTypes.FLOAT,      "FLOAT" },
             { PrimTypes.DOUBLE,     "DOUBLE" },
         };
-        private string EncodePrim(CPrim t)
+        private static string EncodePrim(CPrim t)
         {
             return _primNames[t];
-        }
-
-        private int _funcNum;
-        private int _unnamedNum;
-        private PartXmlWriter _argsWriter;
-        private PartXmlWriter _unnamedWriter;
-        private PartXmlWriter _namedWriter;
-
-        public XmlMaker()
-        {
-            _funcNum = 0;
-            _unnamedNum = 0;
-            _argsWriter = new PartXmlWriter();
-            _unnamedWriter = new PartXmlWriter();
-            _namedWriter = new PartXmlWriter();
-        }
-
-        private string OffsetStr(Offset offset)
-        {
-            if (offset.Bits == 0)
-            {
-                return offset.Bytes + "";
-            }
-            else
-            {
-                return offset.Bytes.ToString() + "." + offset.Bits.ToString();
-            }
         }
 
         private CTerm UnwrapType(CType type, out string wrap)
@@ -102,16 +129,50 @@ namespace PdbReader.Xml
             }
             else if (type is CTypeRef)
             {
-                return ((CTypeRef)type).Name;
+                return "$" + ((CTypeRef)type).Name;
             }
             else
             {
-                return "__Brace__";
+                return "#" + AddUnnamed((CBrace)type);
             }
         }
 
-        // basic attrs: `attrs'(optional), `base', `wrap'
-        private void WriteTypeBasicAttrs(PartXmlWriter writer, CType type, bool writeWrap)
+        private string OffsetStr(Offset offset)
+        {
+            if (offset.Bits == 0)
+            {
+                return offset.Bytes + "";
+            }
+            else
+            {
+                return offset.Bytes.ToString() + "." + offset.Bits.ToString();
+            }
+        }
+
+        internal int AddFunc(CFunc func)
+        {
+            int curNum = ++_funcNum;
+            XmlElement entry = MakeElem("func");
+            AddAttr(entry, "id", curNum);
+            foreach (CType argType in func.Args)
+            {
+                XmlElement arg = MakeElem("arg");
+                AddTypeBasicAttrs(arg, argType, true);
+                AddChild(entry, arg);
+            }
+            AddChild(_args, entry);
+            return curNum;
+        }
+
+        private XmlElement MakeConstEntry(string name, int val)
+        {
+            XmlElement result = MakeElem(name);
+            AddAttr(result, "name", name);
+            AddAttr(result, "val", val);
+            return result;
+        }
+
+        private void AddTypeBasicAttrs(XmlElement elem, CType type, bool writeWrap)
         {
             string a_attr, a_base, a_wrap;
             CTerm core, inner;
@@ -120,64 +181,48 @@ namespace PdbReader.Xml
             inner = StripTypeAttr(core, out a_attr);
             a_base = EncodeBaseType(inner);
 
-            if (a_attr != "") { writer.AddAttr("attr", a_attr); }
-            writer.AddAttr("base", a_base);
-            if (writeWrap) { writer.AddAttr("wrap", a_wrap); }
+            if (a_attr != "") { AddAttr(elem, "attr", a_attr); }
+            AddAttr(elem, "base", a_base);
+            if (writeWrap) { AddAttr(elem, "wrap", a_wrap); }
         }
 
-        private void WriteNameAndOffset(PartXmlWriter writer, CTree.Entry field)
+        private void AddNameAndOffsetAttrs(XmlElement elem, string name, Offset offset)
         {
-            writer.AddAttr("name", field.Name);
-            writer.AddAttr("offset", OffsetStr(field.Offset));
+            AddAttr(elem, "name", name);
+            AddAttr(elem, "offset", OffsetStr(offset));
         }
 
-        internal int AddFunc(CFunc func)
+        private XmlElement MakeFieldEntry(CType type, string name, Offset offset)
         {
-            _funcNum++;
-            _argsWriter.BeginElem("func");
-            _argsWriter.AddAttr("id", _funcNum + "");
-            foreach (CType argType in func.Args)
-            {
-                _argsWriter.BeginElem("arg");
-                WriteTypeBasicAttrs(_argsWriter, argType, true);
-                _argsWriter.EndElem();
-            }
-            _argsWriter.EndElem();
-            return _funcNum;
-        }
-
-        internal void WriteField(PartXmlWriter writer, CTree.Entry field)
-        {
-            CType type = field.Type;
+            XmlElement result;
             if (type is CBits)
             {
                 CBits bit = (CBits)type;
-                writer.BeginElem("bit-field");
-                WriteTypeBasicAttrs(writer, bit.Next, false);
-                WriteNameAndOffset(writer, field);
-                writer.AddAttr("len", bit.Len + "");
+                result = MakeElem("bit-field");
+                AddTypeBasicAttrs(result, bit.Next, false);
+                AddNameAndOffsetAttrs(result, name, offset);
+                AddAttr(result, "len", bit.Len);
             }
             else
             {
-                writer.BeginElem("field");
-                WriteTypeBasicAttrs(writer, type, true);
-                WriteNameAndOffset(writer, field);
+                result = MakeElem("field");
+                AddTypeBasicAttrs(result, type, true);
+                AddNameAndOffsetAttrs(result, name, offset);
             }
-            writer.EndElem();
+            return result;
         }
 
-        private void AddBrace(PartXmlWriter writer, CBrace type, string key, string val)
+        private void AddGroup(XmlElement elem, CBrace type, string key, object val)
         {
-            writer.BeginElem(type.Keyword);
-            writer.AddAttr(key, val);
+            XmlElement group = MakeElem(type.Keyword);
+            AddChild(elem, group);
+            AddAttr(group, key, val);
+
             if (type is CEnum)
             {
                 foreach (CEnum.Entry entry in ((CEnum)type).Entries)
                 {
-                    writer.BeginElem("const");
-                    writer.AddAttr("name", entry.Name);
-                    writer.AddAttr("val", entry.Val + "");
-                    writer.EndElem();
+                    AddChild(group, MakeConstEntry(entry.Name, entry.Val));
                 }
             }
             else
@@ -185,46 +230,21 @@ namespace PdbReader.Xml
                 CTree tree = (CTree)type;
                 foreach (CTree.Entry member in tree.Members)
                 {
-                    WriteField(writer, member);
+                    AddChild(group, MakeFieldEntry(member.Type, member.Name, member.Offset));
                 }
             }
-            writer.EndElem();
         }
 
-        public void AddUnnamed(CBrace type)
+        public int AddUnnamed(CBrace type)
         {
-            _unnamedNum++;
-            AddBrace(_unnamedWriter, type, "id", _unnamedNum + "");
+            int curNum = ++_unnamedNum;
+            AddGroup(_unnamed, type, "id", curNum);
+            return curNum;
         }
 
         public void AddNamed(CBrace type, string name)
         {
-            AddBrace(_namedWriter, type, "name", name);
-        }
-
-        private void AppendResult(StreamWriter sw, string s)
-        {
-            sw.Write(s);
-        }
-
-        private void AppendResultGroup(StreamWriter sw, string tag, PartXmlWriter writer)
-        {
-            AppendResult(sw, "<" + tag + ">");
-            AppendResult(sw, writer.Text);
-            AppendResult(sw, "</" + tag + ">");
-        }
-
-        public void WriteResultTo(Stream output)
-        {
-            using (StreamWriter sw = new StreamWriter(output))
-            {
-                AppendResult(sw, "<?xml version=\"1.0\" ?>");
-                AppendResult(sw, "<defs>");
-                AppendResultGroup(sw, "args", _argsWriter);
-                AppendResultGroup(sw, "unnamed", _unnamedWriter);
-                AppendResultGroup(sw, "named", _namedWriter);
-                AppendResult(sw, "</defs>");
-            }
+            AddGroup(_named, type, "name", name);
         }
     }
 }

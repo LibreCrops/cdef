@@ -32,7 +32,7 @@ namespace PdbReader.Collect
             CTree tree = CreateCType();
             foreach (Member member in _members)
             {
-                tree.Add(member.ToCType(translator), member.Name);
+                tree.Add(member.ToCType(translator), member.Name, member.TopOffset);
             }
             return tree;
         }

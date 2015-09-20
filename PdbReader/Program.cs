@@ -53,21 +53,6 @@ namespace PdbReader
             CType t1 = new CAttrTerm(s1, attrs);
             Console.WriteLine(t1.Define("v", "....", "    "));
         }
-        static void XmlSerializeTest()
-        {
-            XmlMaker x = new XmlMaker();
-            CStruct struc = new CStruct();
-            struc.Add(new CArr(PrimTypes.INT, 10), "I");
-            struc.Add(new CPtr(PrimTypes.VOID), "am");
-            struc.Add(PrimTypes.DOUBLE, "a");
-
-            CFunc func = new CFunc(PrimTypes.VOID);
-            func.Add(new CPtr(PrimTypes.VOID));
-            struc.Add(new CPtr(func), "func");
-
-            x.AddNamed(struc, "What");
-            x.WriteResultTo(Console.OpenStandardOutput());
-        }
         static void Main(string[] args)
         {
             Console.Write(Resources.MainHelp);
@@ -91,7 +76,11 @@ namespace PdbReader
             Translator t = new Translator();
             CBrace t2 = t.TranslateStruct(struct1);
 
-            Console.Write(new DefFactory().CreatePureDef((CBrace)t2, "X").Output(DOT, TAB));
+            // Console.Write(new DefFactory().CreatePureDef((CBrace)t2, "X").Output(DOT, TAB));
+
+            XmlMaker x = new XmlMaker();
+            x.AddNamed(t2, "PEB");
+            x.Save("F:\\a.xml");
         }
     }
 }

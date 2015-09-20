@@ -13,10 +13,6 @@ namespace PdbReader.Types
             private CType _type;
             private string _name;
             private Offset _offset;
-            public Entry(CType type, string name)
-                : this(type, name, Offset.Zero)
-            {
-            }
             public Entry(CType type, string name, Offset offset)
             {
                 _type = type;
@@ -40,10 +36,16 @@ namespace PdbReader.Types
         {
             _entries = new List<Entry>();
         }
+
         public void Add(CType type, string name)
         {
-            _entries.Add(new Entry(type, name));
+            Add(type, name, Offset.Zero);
         }
+        public void Add(CType type, string name, Offset offset)
+        {
+            _entries.Add(new Entry(type, name, offset));
+        }
+
         public List<Entry> Members
         {
             get { return _entries; }

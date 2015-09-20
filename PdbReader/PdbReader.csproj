@@ -97,7 +97,6 @@
     <Compile Include="Types\TypeAttr.cs" />
     <Compile Include="Types\TypeAttrs.cs" />
     <Compile Include="Xml\AttrWrapMaker.cs" />
-    <Compile Include="Xml\PartXmlWriter.cs" />
     <Compile Include="Xml\XmlMaker.cs" />
   </ItemGroup>
   <ItemGroup>
