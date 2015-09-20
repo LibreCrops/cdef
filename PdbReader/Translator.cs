@@ -144,7 +144,7 @@ namespace PdbReader
 
                 string name = subSym.name;
                 CType type = TranslateMember(subSym);
-                res.Add(type, name);
+                res.Add(type, name, thisOffset);
 
                 lastOffset = thisOffset;
             }
