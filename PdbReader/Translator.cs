@@ -207,5 +207,9 @@ namespace PdbReader
                     return new CPrim("NotImpl_Udt");
             }
         }
+        public CEnum TranslateEnum(IDiaSymbol sym)
+        {
+            return new CEnum();
+        }
     }
 }

@@ -55,32 +55,22 @@ namespace PdbReader
         }
         static void Main(string[] args)
         {
-            Console.Write(Resources.MainHelp);
-            // const string filePath = @"E:\DebuggingSymbols\ntdll.pdb\DDC94C54F06040619595D2473D92AB911\ntdll.pdb";
-            // const string filePath = @"F:\GuBigCollect\Tests_PDB\T10_PR_01\Debug\T10_PR_01.pdb";
             const string filePath = @"F:\ntkrnlmp.pdb";
-            IDiaDataSource source = new DiaSource();
-            IDiaSession session;
-            source.loadDataFromPdb(filePath);
-            source.openSession(out session);
+            Pdb p1 = Pdb.Load(filePath);
+            int count = 0;
+            foreach (PdbSymbol sym in p1.Symbols)
+            {
+                Console.WriteLine(sym.Keyword + "\t" + sym.Name);
+                if (++count == 10) { break; }
+            }
 
-            IDiaSymbol global = session.globalScope;
-            IDiaEnumSymbols enumSymbols;
-            global.findChildren(SymTagEnum.SymTagUDT, "_PEB", 0, out enumSymbols);
-
-            IDiaSymbol struct1 = enumSymbols.Item(0);
-            struct1.findChildren(SymTagEnum.SymTagData, null, 0, out enumSymbols);
-
-            IDiaSymbol member1 = enumSymbols.Item(0);
-
-            Translator t = new Translator();
-            CBrace t2 = t.TranslateStruct(struct1);
-
+            Environment.Exit(0);
             // Console.Write(new DefFactory().CreatePureDef((CBrace)t2, "X").Output(DOT, TAB));
 
             XmlMaker x = new XmlMaker();
-            x.AddNamed(t2, "PEB");
-            x.Save("F:\\a.xml");
+            // x.AddNamed(t2, "PEB");
+            // x.AddNamed(t.TranslateStruct(struct2), "DRIVER_OBJECT");
+            // x.Save("F:\\a.xml");
         }
     }
 }

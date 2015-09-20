@@ -47,6 +47,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="App.cs" />
     <Compile Include="Collect\AnonymousStruct.cs" />
     <Compile Include="Collect\AnonymousUnion.cs" />
     <Compile Include="Collect\Collector.cs" />
@@ -56,6 +57,7 @@
     <Compile Include="Collect\LeafMember.cs" />
     <Compile Include="Collect\LeafMembers.cs" />
     <Compile Include="Collect\Member.cs" />
+    <Compile Include="DiaExtra\ErrorCodes.cs" />
     <Compile Include="Offset.cs" />
     <Compile Include="Collect\TreeMember.cs" />
     <Compile Include="Defs\Def.cs" />
@@ -68,6 +70,12 @@
     <Compile Include="DiaExtra\UdtKind.cs" />
     <Compile Include="IntTypePair.cs" />
     <Compile Include="IntTypePairs.cs" />
+    <Compile Include="Pdb.cs" />
+    <Compile Include="PdbFormatException.cs" />
+    <Compile Include="PdbNotFoundException.cs" />
+    <Compile Include="PdbSymbol.cs" />
+    <Compile Include="PdbSymbolType.cs" />
+    <Compile Include="PdbSymbolTypes.cs" />
     <Compile Include="PrimTypes.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
