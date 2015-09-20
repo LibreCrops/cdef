@@ -1,4 +1,4 @@
-# PdbReader
+# PdbReader 0.1 Beta
 Get struct definitions from PDB files.
 
-Under construction.
+Help us test this app!

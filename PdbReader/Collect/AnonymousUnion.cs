@@ -72,9 +72,5 @@ namespace PdbReader.Collect
         {
             get { return _botOffset; }
         }
-        public void SetBotOffset(Offset value)
-        {
-            _botOffset = value;
-        }
     }
 }

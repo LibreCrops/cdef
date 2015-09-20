@@ -215,7 +215,15 @@ namespace PdbReader
         }
         public CEnum TranslateEnum(IDiaSymbol sym)
         {
-            return new CEnum();
+            IDiaEnumSymbols symbols;
+            sym.findChildren(SymTagEnum.SymTagNull, null, 0, out symbols);
+
+            CEnum res = new CEnum();
+            foreach (IDiaSymbol constant in symbols)
+            {
+                res.Add(constant.name, (uint)constant.value);
+            }
+            return res;
         }
     }
 }

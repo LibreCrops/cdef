@@ -166,9 +166,9 @@ namespace PdbReader.Xml
             return curNum;
         }
 
-        private XmlElement MakeConstEntry(string name, int val)
+        private XmlElement MakeConstEntry(string name, uint val)
         {
-            XmlElement result = MakeElem(name);
+            XmlElement result = MakeElem("const");
             AddAttr(result, "name", name);
             AddAttr(result, "val", val);
             return result;

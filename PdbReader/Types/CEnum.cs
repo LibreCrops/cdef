@@ -11,8 +11,8 @@ namespace PdbReader.Types
         public class Entry
         {
             private string _name;
-            private int _val;
-            public Entry(string name, int val)
+            private uint _val;
+            public Entry(string name, uint val)
             {
                 _name = name;
                 _val = val;
@@ -21,7 +21,7 @@ namespace PdbReader.Types
             {
                 get { return _name; }
             }
-            public int Val
+            public uint Val
             {
                 get { return _val; }
             }
@@ -30,7 +30,7 @@ namespace PdbReader.Types
         {
             _entries = new List<Entry>();
         }
-        public void Add(string name, int val)
+        public void Add(string name, uint val)
         {
             _entries.Add(new Entry(name, val));
         }
