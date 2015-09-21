@@ -55,6 +55,9 @@ namespace PdbReader
             int size = (int)sym.length;
             switch ((BaseTypeEnum)sym.baseType)
             {
+                case BaseTypeEnum.btNoType:
+                    return PrimTypes.NOTYPE;
+
                 case BaseTypeEnum.btVoid:
                     return PrimTypes.VOID;
 
@@ -79,7 +82,7 @@ namespace PdbReader
                     return sym.length == 4 ? PrimTypes.FLOAT : PrimTypes.FLOAT;
 
                 default:
-                    throw new NotImplementedException("BaseType");
+                    throw new NotImplementedException(((BaseTypeEnum)sym.baseType).ToString());
             }
         }
         public CTerm TranslateBaseType(IDiaSymbol sym)
