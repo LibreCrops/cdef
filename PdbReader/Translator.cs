@@ -55,9 +55,6 @@ namespace PdbReader
             int size = (int)sym.length;
             switch ((BaseTypeEnum)sym.baseType)
             {
-                case BaseTypeEnum.btNoType:
-                    return PrimTypes.NOTYPE;
-
                 case BaseTypeEnum.btVoid:
                     return PrimTypes.VOID;
 
@@ -107,6 +104,21 @@ namespace PdbReader
 
             IDiaEnumSymbols syms;
             sym.findChildren(SymTagEnum.SymTagFunctionArgType, null, 0, out syms);
+
+            if (syms.count == 0)
+            {
+                res.Add(PrimTypes.VOID);
+                return res;
+            }
+            else if (syms.count == 1)
+            {
+                IDiaSymbol only = syms.Item(0).type;
+                if ((SymTagEnum)only.symTag == SymTagEnum.SymTagBaseType &&
+                    (BaseTypeEnum)only.baseType == BaseTypeEnum.btNoType)
+                {
+                    return res;
+                }
+            }
 
             foreach (IDiaSymbol argSym in syms)
             {

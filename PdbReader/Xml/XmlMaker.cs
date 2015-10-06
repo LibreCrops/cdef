@@ -65,7 +65,6 @@ namespace PdbReader.Xml
 
         private static Dictionary<CPrim, string> _primNames = new Dictionary<CPrim, string>()
         {
-            { PrimTypes.NOTYPE,     "NOTYPE" },
             { PrimTypes.VOID,       "VOID" },
 
             { PrimTypes.WCHAR,      "WCHAR" },

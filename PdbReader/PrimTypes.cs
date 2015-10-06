@@ -8,8 +8,6 @@ namespace PdbReader
 {
     static class PrimTypes
     {
-        public static CPrim NOTYPE      = new CPrim("__NoType__");
-
         public static CPrim VOID        = new CPrim("VOID");
 
         public static CPrim WCHAR       = new CPrim("WCHAR");

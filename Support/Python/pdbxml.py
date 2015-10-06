@@ -229,3 +229,6 @@ class CBits(CWrap):
     # (impl)
     def decorate(self, s):
         return s + ' : ' + str(self.len);
+
+#====================================================================#
+
