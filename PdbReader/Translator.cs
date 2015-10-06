@@ -38,7 +38,7 @@ namespace PdbReader
                         : TranslateTypeRef(sym);
 
                 default:
-                    throw new NotImplementedException();
+                    throw new NotImplementedException(((SymTagEnum)sym.symTag).ToString());
             }
         }
         private CTerm WithAttr(CTerm type, IDiaSymbol sym)
@@ -50,7 +50,7 @@ namespace PdbReader
 
             return attrs.Any() ? new CAttrTerm(type, attrs) : type;
         }
-        public CPrim _TranslateBaseType(IDiaSymbol sym)
+        public CPrefix _TranslateBaseType(IDiaSymbol sym)
         {
             int size = (int)sym.length;
             switch ((BaseTypeEnum)sym.baseType)
@@ -77,6 +77,9 @@ namespace PdbReader
 
                 case BaseTypeEnum.btFloat:
                     return sym.length == 4 ? PrimTypes.FLOAT : PrimTypes.FLOAT;
+
+                case BaseTypeEnum.btHresult:
+                    return new CTypeRef("HRESULT");
 
                 default:
                     throw new NotImplementedException(((BaseTypeEnum)sym.baseType).ToString());

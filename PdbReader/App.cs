@@ -58,7 +58,16 @@ namespace PdbReader
                 WriteError("wrong pdb format");
                 return 2;
             }
-            _action.Execute(this);
+
+            try
+            {
+                _action.Execute(this);
+            }
+            catch (NotImplementedException ex)
+            {
+                WriteError("not impl: " + ex.Message);
+                return 127;
+            }
             return 0;
         }
     }

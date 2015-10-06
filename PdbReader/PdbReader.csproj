@@ -59,6 +59,7 @@
     <Compile Include="Collect\LeafMember.cs" />
     <Compile Include="Collect\LeafMembers.cs" />
     <Compile Include="Collect\Member.cs" />
+    <Compile Include="CppException.cs" />
     <Compile Include="DiaExtra\ErrorCodes.cs" />
     <Compile Include="Offset.cs" />
     <Compile Include="Collect\TreeMember.cs" />
