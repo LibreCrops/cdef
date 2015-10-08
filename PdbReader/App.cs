@@ -55,7 +55,7 @@ namespace PdbReader
             }
             catch (PdbFormatException)
             {
-                WriteError("wrong pdb format");
+                WriteError("wrong pdb format: " + _args[1]);
                 return 2;
             }
 
@@ -65,7 +65,7 @@ namespace PdbReader
             }
             catch (NotImplementedException ex)
             {
-                WriteError("not impl: " + ex.Message);
+                WriteError("not impl: " + ex.Message + " @ " + _args[1]);
                 return 127;
             }
             return 0;
