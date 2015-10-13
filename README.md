@@ -1,4 +1,6 @@
-# PdbReader - Designed For Automation And Further Development
+# PdbReader
+
+Designed For Automation And Further Development
 
 Get struct definitions from PDB files.
 
