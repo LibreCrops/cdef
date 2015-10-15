@@ -21,6 +21,10 @@ namespace PdbReader.Xml
             get { return _val == "" ? _val : _val.Substring(1); }
         }
 
+        public void AfterVisit(CWrap type)
+        {
+        }
+
         public void VisitArr(CArr arr)
         {
             _val = " a " + arr.Len + _val;

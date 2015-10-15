@@ -7,6 +7,7 @@ namespace PdbReader.Types
 {
     interface IWrapVisitor
     {
+        void AfterVisit(CWrap type);
         void VisitArr(CArr arr);
         void VisitPtr(CPtr ptr);
         void VisitFunc(CFunc func);

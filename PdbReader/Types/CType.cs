@@ -15,6 +15,7 @@ namespace PdbReader.Types
             while ((w = t as CWrap) != null)
             {
                 w.Accept(visitor);
+                visitor.AfterVisit(w);
                 t = w.Next;
             }
             core = (CTerm)t;
@@ -32,30 +33,20 @@ namespace PdbReader.Types
             }
         }
 
-        private string Decorate(string var, out CType core)
+        private string Decorate(string var, out CTerm core)
         {
             Decorator decorator = new Decorator(var);
-            CType t = this;
-            CWrap w;
-            while ((w = t as CWrap) != null)
-            {
-                w.Accept(decorator);
-                decorator.LastIsPtr = w is CPtr;
-                t = w.Next;
-            }
-            core = (CTerm)t;
+            UnwrapTo(decorator, out core);
             return decorator.Result;
         }
         public string Define(string var, string indent, string tab)
         {
-            CType core1;
-            CTerm core2;
+            CTerm core;
             string s1, s2;
 
-            s1 = Decorate(var, out core1);
-            core2 = (CTerm)core1;
+            s1 = Decorate(var, out core);
 
-            s2 = indent + core2.PartDef(indent, tab);
+            s2 = indent + core.PartDef(indent, tab);
             return s2 + MaybeSpace(s1) + ";\n";
         }
         private string TryGetPrefix(CType t)
@@ -83,7 +74,7 @@ namespace PdbReader.Types
         {
             get
             {
-                CType core;
+                CTerm core;
                 string s1, s2;
 
                 s1 = Decorate("", out core);

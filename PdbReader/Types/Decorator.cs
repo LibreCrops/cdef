@@ -21,9 +21,9 @@ namespace PdbReader.Types
             get { return _s; }
         }
 
-        public bool LastIsPtr
+        public void AfterVisit(CWrap type)
         {
-            set { _lastIsPtr = value; }
+            _lastIsPtr = type is CPtr;
         }
         private string MaybeParen(string s)
         {
