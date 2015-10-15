@@ -18,11 +18,6 @@ namespace PdbReader.Types
         {
             get { return _len; }
         }
-
-        public override string Decorate(string s)
-        {
-            return s + " : " + _len;
-        }
         public override void Accept(IWrapVisitor visitor)
         {
             visitor.VisitBits(this);

@@ -36,10 +36,6 @@ namespace PdbReader.Types
         {
             _args.Add(type);
         }
-        public override string Decorate(string s)
-        {
-            return s + "(" + string.Join(", ", _args.Select(a => a.Sig)) + ")";
-        }
         public override void Accept(IWrapVisitor visitor)
         {
             visitor.VisitFunc(this);

@@ -10,11 +10,12 @@ namespace PdbReader.Types
         private string _s;
         private bool _lastIsPtr;
 
-        public Decorator()
+        public Decorator(string s)
         {
-            _s = "";
+            _s = s;
             _lastIsPtr = false;
         }
+
         public string Result
         {
             get { return _s; }
@@ -46,10 +47,17 @@ namespace PdbReader.Types
             _s = "*" + _s;
         }
 
+        private string FuncArgsStr(CFunc func)
+        {
+            List<CType> args = func.Args;
+            return args.Any()
+                ? string.Join(", ", args.Select(a => a.Sig))
+                : "void";
+        }
         public void VisitFunc(CFunc func)
         {
             _s = MaybeParen(WithCallConv(_s, func.CallConv))
-                + "(" + string.Join(", ", func.Args.Select(a => a.Sig)) + ")";
+                + "(" + FuncArgsStr(func) + ")";
         }
 
         public void VisitBits(CBits bits)

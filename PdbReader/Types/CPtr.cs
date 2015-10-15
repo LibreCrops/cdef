@@ -11,17 +11,6 @@ namespace PdbReader.Types
             : base(next)
         {
         }
-        public override string Decorate(string s)
-        {
-            if (_next is CArr || _next is CFunc)
-            {
-                return "(*" + s + ")";
-            }
-            else
-            {
-                return "*" + s;
-            }
-        }
         public override void Accept(IWrapVisitor visitor)
         {
             visitor.VisitPtr(this);

@@ -32,18 +32,19 @@ namespace PdbReader.Types
             }
         }
 
-        public string Wrap(string var, out CType core)
+        private string Decorate(string var, out CType core)
         {
-            string s = var;
+            Decorator decorator = new Decorator(var);
             CType t = this;
             CWrap w;
             while ((w = t as CWrap) != null)
             {
-                s = w.Decorate(s);
+                w.Accept(decorator);
+                decorator.LastIsPtr = w is CPtr;
                 t = w.Next;
             }
-            core = t;
-            return s;
+            core = (CTerm)t;
+            return decorator.Result;
         }
         public string Define(string var, string indent, string tab)
         {
@@ -51,7 +52,7 @@ namespace PdbReader.Types
             CTerm core2;
             string s1, s2;
 
-            s1 = Wrap(var, out core1);
+            s1 = Decorate(var, out core1);
             core2 = (CTerm)core1;
 
             s2 = indent + core2.PartDef(indent, tab);
@@ -85,7 +86,7 @@ namespace PdbReader.Types
                 CType core;
                 string s1, s2;
 
-                s1 = Wrap("", out core);
+                s1 = Decorate("", out core);
                 s2 = TryGetPrefix(core);
                 return s2 + MaybeSpace(s1);
             }
