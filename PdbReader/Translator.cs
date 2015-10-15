@@ -100,10 +100,22 @@ namespace PdbReader
             int len = (int)sym.count;           // it should be safe
             return new CArr(next, len);
         }
+        private CallConv TranslateCallConv(uint callConv)
+        {
+            switch ((CvCallEnum)callConv)
+            {
+                case CvCallEnum.NEAR_C:
+                    return CallConvs.Default;
+                case CvCallEnum.NEAR_STD:
+                    return CallConvs.Stdcall;
+                default:
+                    throw new NotImplementedException(((CvCallEnum)callConv).ToString());
+            }
+        }
         public CFunc TranslateFunc(IDiaSymbol sym)
         {
             CType retType = Translate(sym.type);
-            CFunc res = new CFunc(retType);
+            CFunc res = new CFunc(retType, TranslateCallConv(sym.callingConvention));
 
             IDiaEnumSymbols syms;
             sym.findChildren(SymTagEnum.SymTagFunctionArgType, null, 0, out syms);
