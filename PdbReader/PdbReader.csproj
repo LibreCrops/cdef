@@ -88,6 +88,8 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="Translator.cs" />
+    <Compile Include="Types\CallConv.cs" />
+    <Compile Include="Types\CallConvs.cs" />
     <Compile Include="Types\CArr.cs" />
     <Compile Include="Types\CAttrTerm.cs" />
     <Compile Include="Types\CBits.cs" />
@@ -104,6 +106,7 @@
     <Compile Include="Types\CTypeRef.cs" />
     <Compile Include="Types\CUnion.cs" />
     <Compile Include="Types\CWrap.cs" />
+    <Compile Include="Types\Decorator.cs" />
     <Compile Include="Types\IWrapVisitor.cs" />
     <Compile Include="Types\TypeAttr.cs" />
     <Compile Include="Types\TypeAttrs.cs" />
