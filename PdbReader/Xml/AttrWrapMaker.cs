@@ -37,7 +37,10 @@ namespace PdbReader.Xml
 
         public void VisitFunc(CFunc func)
         {
-            _val = " f " + _maker.AddFunc(func) + _val;
+            string letter = object.ReferenceEquals(func.CallConv, CallConvs.Default)
+                ? "f"
+                : "F";
+            _val = " " + letter + " " + _maker.AddFunc(func) + _val;
         }
 
         public void VisitBits(CBits bits)
