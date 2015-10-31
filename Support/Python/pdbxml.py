@@ -1,6 +1,6 @@
 import xml.etree.ElementTree as et
 #====================================================================#
-def maybeSpace(s):
+def maybe_space(s):
     return ' ' + s if s else ''
 
 class CType(object):
@@ -20,31 +20,31 @@ class CType(object):
     
     def define(self, var, indent, tab):
         core, s1 = self._decorate(var)
-        s2 = indent + core.partDef(indent, tab)
-        return s2 + maybeSpace(s1) + ';\n'
+        s2 = indent + core.part_def(indent, tab)
+        return s2 + maybe_space(s1) + ';\n'
 
     @staticmethod
-    def getPrefix(t):
+    def get_prefix(t):
         assert isinstance(t, CPrefix)
         return t.prefix
     
     @staticmethod
-    def extractPrefix(t):
+    def extract_prefix(t):
         if isinstance(t, CAttrTerm):
-            return t.attrStr + ' ' + CType.getPrefix(t.coreType)
+            return t.attr_str + ' ' + CType.get_prefix(t.core_type)
         else:
-            return CType.getPrefix(t)
+            return CType.get_prefix(t)
 
     @property
     def sig(self):
         core, s1 = self._decorate('')
-        s2 = CType.extractPrefix(core)
-        return s2 + maybeSpace(s1)
+        s2 = CType.extract_prefix(core)
+        return s2 + maybe_space(s1)
 
     def _search_dep(self, dep):
         searcher = DepSearcher(dep)
         t = self.unwrap_to(searcher)
-        core = t.coreType if isinstance(t, CAttrTerm) else t
+        core = t.core_type if isinstance(t, CAttrTerm) else t
         if isinstance(core, CTypeRef):
             dep.add(core.name)
         return core, searcher.has_ptr
@@ -61,12 +61,12 @@ class CType(object):
         assert isinstance(t, CPrefix)
 
 class CTerm(CType):
-    # (abstract) partDef
+    # (abstract) part_def
     pass
 
 class CPrefix(CTerm):
     # (abstract property) prefix
-    def partDef(self, indent, tab):
+    def part_def(self, indent, tab):
         return self.prefix
 
 class CPrim(CPrefix):
@@ -89,20 +89,20 @@ class CTypeRef(CPrefix):
 
 class CBrace(CTerm):
     # (abstract property) keyword
-    # (abstract) childDef(indent, tab)
-    def qualifiedName(self, innerName):
-        return self.keyword + maybeSpace(innerName)
+    # (abstract) child_def(indent, tab)
+    def qualified_name(self, inner_name):
+        return self.keyword + maybe_space(inner_name)
     
-    def defBody(self, indent, tab):
+    def def_body(self, indent, tab):
         s = ''
         s += indent + '{' + '\n'
-        s += self.childDef(indent + tab, tab)
+        s += self.child_def(indent + tab, tab)
         s += indent + '}'
         return s
     
     # (impl)
-    def partDef(self, indent, tab):
-        return self.keyword + '\n' + self.defBody(indent, tab)
+    def part_def(self, indent, tab):
+        return self.keyword + '\n' + self.def_body(indent, tab)
 
 class CEnumEntry:
     def __init__(self, name, val):
@@ -126,7 +126,7 @@ class CEnum(CBrace):
         return 'enum'
     
     # (impl)
-    def childDef(self, indent, tab):
+    def child_def(self, indent, tab):
         if not self.__entries:
             return ''
         
@@ -157,7 +157,7 @@ class CTree(CBrace):
         return self.__entries
     
     # (impl)
-    def childDef(self, indent, tab):
+    def child_def(self, indent, tab):
         s = ''
         for e in self.__entries:
             s += e.type.define(e.name, indent, tab)
@@ -217,16 +217,16 @@ class CAttrTerm(CTerm):
         self.__attrs = attrs
     
     @property
-    def coreType(self):
+    def core_type(self):
         return self.__type
     
     @property
-    def attrStr(self):
+    def attr_str(self):
         return ' '.join(map(lambda attr: attr.name, sorted(self.__attrs)))
 
     # (impl)
-    def partDef(self, indent, tab):
-        return self.attrStr + ' ' + self.__type.partDef(indent, tab)
+    def part_def(self, indent, tab):
+        return self.attr_str + ' ' + self.__type.part_def(indent, tab)
 
 ########################################
 class CWrap(CType):
@@ -248,12 +248,12 @@ class CArr(CWrap):
         visitor.visit_arr(self)
 
 class CFunc(CWrap):
-    def __init__(self, retType):
-        self.next = retType
+    def __init__(self, ret_type):
+        self.next = ret_type
         self.args = []
     
     @property
-    def retType(self):
+    def ret_type(self):
         return self.next
         
     def add(self, type):
@@ -263,8 +263,8 @@ class CFunc(CWrap):
         visitor.visit_func(self)
 
 class CBits(CWrap):
-    def __init__(self, baseType, len):
-        self.next = baseType
+    def __init__(self, base_type, len):
+        self.next = base_type
         self.len = len
 
     def accept(self, visitor):
@@ -366,6 +366,7 @@ class Locator(object):
         # assert int(child.attrib['id']) == id
         # BELOW: for TEST purposes
         if int(child.attrib['id']) != id:
+            print "warn: need id %d but current id is %s" % (id, child.attrib['id'])
             return self.__elem.findall(".//*[@id='%s']" % id)[0]
         return child
 
@@ -376,70 +377,70 @@ class XmlParser(object):
         self.root = root
         self.__locFunc = Locator(root[0])
         self.__locUnnamed = Locator(root[1])
-        
-    def readNamed(self, eType):
-        return self.readGroup(eType)
+    
+    def _read_named(self, e_type):
+        return self._read_group(e_type)
 
-    def readUnnamed(self, id):
-        eUnnamed = self.__locUnnamed.find(id)
-        return self.readGroup(eUnnamed)
+    def _read_unnamed(self, id):
+        e_unnamed = self.__locUnnamed.find(id)
+        return self._read_group(e_unnamed)
 
-    def readGroup(self, eType):
-        if eType.tag == 'enum':
-            return self.readEnum(eType)
+    def _read_group(self, e_type):
+        if e_type.tag == 'enum':
+            return self._read_enum(e_type)
         else:
-            tree = CStruct() if eType.tag == 'struct' else CUnion()
-            return self.readTree(eType, tree)
+            tree = CStruct() if e_type.tag == 'struct' else CUnion()
+            return self._read_tree(e_type, tree)
 
-    def readTree(self, eType, t):
-        for eField in eType:
-            name = eField.attrib['name']
+    def _read_tree(self, e_type, t):
+        for e_field in e_type:
+            name = e_field.attrib['name']
             # TODO? offset
-            # TODO? merge into readField()
-            typ = self.readField(eField)
+            # TODO? merge into _read_field()
+            typ = self._read_field(e_field)
             t.add(typ, name)
         return t
 
-    def readEnum(self, eType):
+    def _read_enum(self, e_type):
         t = CEnum()
-        for eConst in eType:
-            name = eConst.attrib['name']
-            val = eConst.attrib['val']
+        for e_const in e_type:
+            name = e_const.attrib['name']
+            val = e_const.attrib['val']
             t.add(name, val)
         return t
     
-    def readField(self, eField):
-        if eField.tag == 'bit-field':
-            t = self.readType(eField, False)
-            t = CBits(t, int(eField.attrib['len']))
+    def _read_field(self, e_field):
+        if e_field.tag == 'bit-field':
+            t = self._read_type(e_field, False)
+            t = CBits(t, int(e_field.attrib['len']))
         else:
-            t = self.readType(eField, True)
+            t = self._read_type(e_field, True)
         return t
     
-    def readType(self, eField, hasWrap):
-        attrs = eField.attrib
-        t = self.readBase(attrs['base'])
+    def _read_type(self, e_field, hasWrap):
+        attrs = e_field.attrib
+        t = self._read_base(attrs['base'])
         if attrs.has_key('attr'):
-            t = CAttrTerm(t, self.readAttr(attrs['attr']))
+            t = CAttrTerm(t, self._read_attr(attrs['attr']))
         if hasWrap:
-            t = self.readWrap(attrs['wrap'], t)
+            t = self._read_wrap(attrs['wrap'], t)
         return t
     
-    def readAttr(self, attr):
+    def _read_attr(self, attr):
         attrSet = set()
         for s in attr.split():
             attrSet.add(TypeAttrs.lookup(s))
         return attrSet
     
-    def readBase(self, base):
+    def _read_base(self, base):
         sigil = base[0]
         name = base[1:]
         if sigil == '.':
-            return self.readPrim(name)
+            return self._read_prim(name)
         elif sigil == '$':
-            return self.readTypeRef(name)
+            return self._read_typeRef(name)
         else:
-            return self.readUnnamed(int(name))
+            return self._read_unnamed(int(name))
     
     # TODO define this as a class var
     __primTypes = {
@@ -462,13 +463,13 @@ class XmlParser(object):
         'DOUBLE':       PrimTypes.DOUBLE,
     }
     
-    def readPrim(self, name):
+    def _read_prim(self, name):
         return XmlParser.__primTypes[name]
     
-    def readTypeRef(self, name):
+    def _read_typeRef(self, name):
         return CTypeRef(name)
     
-    def readWrap(self, wrap, t):
+    def _read_wrap(self, wrap, t):
         arr = wrap.split()
         i = 0
         while i < len(arr):
@@ -480,17 +481,16 @@ class XmlParser(object):
                 t = CPtr(t)
                 i += 1
             else:
-                t = self.readFunc(int(arr[i + 1]), t)
+                t = self._read_func(int(arr[i + 1]), t)
                 i += 2
         return t
 
-    def readFunc(self, id, t):
-        eFunc = self.__locFunc.find(id)
+    def _read_func(self, id, t):
+        e_func = self.__locFunc.find(id)
         t = CFunc(t)
-        for eArg in eFunc:
-            t.add(self.readType(eArg, True))
+        for e_arg in e_func:
+            t.add(self._read_type(e_arg, True))
         return t
-
 
 # parser = XmlParser('f:\\ntkrnlmp.xml')
 # named = parser.root[2]
