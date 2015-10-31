@@ -247,10 +247,20 @@ class CArr(CWrap):
     def accept(self, visitor):
         visitor.visit_arr(self)
 
+class CallConv(object):
+    def __init__(self, keyword):
+        self.keyword = keyword
+
+class CallConvs(object):
+    default = CallConv(None)
+    stdcall = CallConv('__stdcall')
+    cdecl = CallConv('__cdecl')
+
 class CFunc(CWrap):
-    def __init__(self, ret_type):
+    def __init__(self, ret_type, call_conv = CallConvs.default):
         self.next = ret_type
         self.args = []
+        self.call_conv = call_conv
     
     @property
     def ret_type(self):
@@ -261,7 +271,7 @@ class CFunc(CWrap):
         
     def accept(self, visitor):
         visitor.visit_func(self)
-
+        
 class CBits(CWrap):
     def __init__(self, base_type, len):
         self.next = base_type
@@ -305,14 +315,24 @@ class Decorator(WrapVisitor):
     def visit_ptr(self, t):
         self._s = '*' + self._s
 
-    def _func_args_str(self, func):
+    @staticmethod
+    def _func_args_str(func):
         if not func.args:
             return 'void'
         else:
             return ', '.join(map(lambda t: t.sig, func.args))
 
+    @staticmethod
+    def _with_call_conv(s, conv):
+        if conv is CallConvs.default:
+            return s
+        else:
+            return conv.keyword + ' ' + s
+        
     def visit_func(self, t):
-        self._s = self._maybe_paren(self._s) + '(' + self._func_args_str(t) + ')'
+        self._s = (
+            self._maybe_paren(Decorator._with_call_conv(self._s, t.call_conv)) +
+            '(' + Decorator._func_args_str(t) + ')')
 
     def visit_bits(self, t):
         self._s += ' : ' + str(t.len);
@@ -357,17 +377,17 @@ class PrimTypes(object):
 #====================================================================#
 class Locator(object):
     def __init__(self, elem):
-        self.__elem = elem
-        self.__index = -1
+        self._elem = elem
+        self._index = -1
 
     def find(self, id):
-        self.__index += 1
-        child = self.__elem[self.__index]
+        self._index += 1
+        child = self._elem[self._index]
         # assert int(child.attrib['id']) == id
         # BELOW: for TEST purposes
         if int(child.attrib['id']) != id:
             print "warn: need id %d but current id is %s" % (id, child.attrib['id'])
-            return self.__elem.findall(".//*[@id='%s']" % id)[0]
+            return self._elem.findall(".//*[@id='%s']" % id)[0]
         return child
 
 class XmlParser(object):
@@ -375,14 +395,15 @@ class XmlParser(object):
         tree = et.parse(path)
         root = tree.getroot()
         self.root = root
-        self.__locFunc = Locator(root[0])
-        self.__locUnnamed = Locator(root[1])
+        self._locFunc = Locator(root[0])
+        self._locUnnamed = Locator(root[1])
+        self._named = root[2]
     
     def _read_named(self, e_type):
         return self._read_group(e_type)
 
     def _read_unnamed(self, id):
-        e_unnamed = self.__locUnnamed.find(id)
+        e_unnamed = self._locUnnamed.find(id)
         return self._read_group(e_unnamed)
 
     def _read_group(self, e_type):
@@ -473,7 +494,7 @@ class XmlParser(object):
         arr = wrap.split()
         i = 0
         while i < len(arr):
-            c = arr[i].lower()
+            c = arr[i]
             if c == 'a':
                 t = CArr(t, int(arr[i + 1]))
                 i += 2
@@ -481,32 +502,66 @@ class XmlParser(object):
                 t = CPtr(t)
                 i += 1
             else:
-                t = self._read_func(int(arr[i + 1]), t)
+                conv = CallConvs.stdcall if c == 'F' else CallConvs.default
+                t = self._read_func(int(arr[i + 1]), t, conv)
                 i += 2
         return t
 
-    def _read_func(self, id, t):
-        e_func = self.__locFunc.find(id)
-        t = CFunc(t)
+    def _read_func(self, id, t, conv):
+        e_func = self._locFunc.find(id)
+        t = CFunc(t, conv)
         for e_arg in e_func:
             t.add(self._read_type(e_arg, True))
         return t
 
-# parser = XmlParser('f:\\ntkrnlmp.xml')
-# named = parser.root[2]
+    def read_to_storage(self, storage):
+        for e_type in self._named:
+            name = e_type.attrib['name']
+            type = self._read_named(e_type)
+            storage.add(name, type)
 
-# print parser.readGroup(named[5]).define('x', '....', '    ')
-f1 = CFunc(PrimTypes.INT)
-f1.add(CTypeRef('BETA'))
+class ImplItem(object):
 
-s1 = CStruct()
-s1.add(CTypeRef('ALPHA'), 'a')
-s1.add(CPtr(f1), 'c')
-s1.add(CPtr(CArr(CTypeRef('GAMMA'), 10)), 'c')
+    def __init__(self, type, file, index):
+        self.type = type
+        self.file = file
+        self.index = index
+    
+class Storage(object):
 
-s2 = CUnion()
-s2.add(CTypeRef('OK'), 'zz')
-s1.add(CPtr(s2), 'd')
+    def __init__(self):
+        self._data = {}
 
-print s1.define('x', '....', '    ')
-print s1.get_dep()
+    def begin_file(self, file):
+        self._file = file
+        self._indices = {}
+
+    def end_file(self):
+        self._file = None
+        self._indices = None
+
+    def _fetch_index(self, name):
+        index = self._indices.get(name)
+        index = index + 1 if (index is not None) else 0
+        self._indices[name] = index
+        return index
+
+    def add(self, name, type):
+        file = self._file
+        index = self._fetch_index(name)
+        items = self._data.get(name)
+        if not items:
+            items = []
+            self._data[name] = items
+        items.append(ImplItem(type, file, index))
+
+    @property
+    def impls(self):
+        return self._data
+
+#====================================================================#
+parser = XmlParser('f:\\zzz.xml')
+st = Storage()
+st.begin_file(1)
+parser.read_to_storage(st)
+st.end_file()
