@@ -4,13 +4,6 @@ def maybeSpace(s):
     return ' ' + s if s else ''
 
 class CType(object):
-    def wrap(self, var):
-        s = var
-        t = self
-        while isinstance(t, CWrap):
-            s = t.decorate(s)
-            t = t.next
-        return s, t
 
     def unwrap_to(self, visitor):
         t = self
@@ -48,6 +41,25 @@ class CType(object):
         s2 = CType.extractPrefix(core)
         return s2 + maybeSpace(s1)
 
+    def _search_dep(self, dep):
+        searcher = DepSearcher(dep)
+        t = self.unwrap_to(searcher)
+        core = t.coreType if isinstance(t, CAttrTerm) else t
+        if isinstance(core, CTypeRef):
+            dep.add(core.name)
+        return core, searcher.has_ptr
+    
+    def search_depending_and_using(self, dep, use):
+        t, has_ptr = self._search_dep(dep)
+        if isinstance(t, CTypeRef) and not has_ptr:
+            use.add(t.name)
+        elif isinstance(t, CTree):
+            t.search_depending_and_using(dep, use)
+
+    def search_depending(self, dep):
+        t, _ = self._search_dep(dep)
+        assert isinstance(t, CPrefix)
+
 class CTerm(CType):
     # (abstract) partDef
     pass
@@ -59,21 +71,21 @@ class CPrefix(CTerm):
 
 class CPrim(CPrefix):
     def __init__(self, name):
-        self.__name = name
+        self.name = name
 
     # (impl)
     @property
     def prefix(self):
-        return self.__name
+        return self.name
 
 class CTypeRef(CPrefix):
     def __init__(self, name):
-        self.__name = name
+        self.name = name
 
     # (impl)
     @property
     def prefix(self):
-        return self.__name
+        return self.name
 
 class CBrace(CTerm):
     # (abstract property) keyword
@@ -150,6 +162,16 @@ class CTree(CBrace):
         for e in self.__entries:
             s += e.type.define(e.name, indent, tab)
         return s
+
+    def search_depending_and_using(self, dep, use):
+        for e in self.__entries:
+            e.type.search_depending_and_using(dep, use)
+
+    def get_dep(self):
+        dep = set()
+        use = set()
+        self.search_depending_and_using(dep, use)
+        return (dep, use)
 
 class CStruct(CTree):
     # (impl)
@@ -236,7 +258,7 @@ class CFunc(CWrap):
         
     def add(self, type):
         self.args.append(type)
-
+        
     def accept(self, visitor):
         visitor.visit_func(self)
 
@@ -299,6 +321,19 @@ class Decorator(WrapVisitor):
     def result(self):
         return self._s
 
+class DepSearcher(WrapVisitor):
+
+    def __init__(self, dep_set):
+        self.has_ptr = False
+        self._dep_set = dep_set
+
+    def visit_ptr(self, t):
+        self.has_ptr = True
+
+    def visit_func(self, t):
+        for arg in t.args:
+            arg.search_depending(self._dep_set)
+    
 ########################################        
 class PrimTypes(object):
     VOID        = CPrim('void')
@@ -457,7 +492,21 @@ class XmlParser(object):
         return t
 
 
-parser = XmlParser('f:\\ntkrnlmp.xml')
-named = parser.root[2]
+# parser = XmlParser('f:\\ntkrnlmp.xml')
+# named = parser.root[2]
 
-print parser.readGroup(named[5]).define('x', '....', '    ')
+# print parser.readGroup(named[5]).define('x', '....', '    ')
+f1 = CFunc(PrimTypes.INT)
+f1.add(CTypeRef('BETA'))
+
+s1 = CStruct()
+s1.add(CTypeRef('ALPHA'), 'a')
+s1.add(CPtr(f1), 'c')
+s1.add(CPtr(CArr(CTypeRef('GAMMA'), 10)), 'c')
+
+s2 = CUnion()
+s2.add(CTypeRef('OK'), 'zz')
+s1.add(CPtr(s2), 'd')
+
+print s1.define('x', '....', '    ')
+print s1.get_dep()
