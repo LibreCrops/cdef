@@ -11,9 +11,22 @@ class CType(object):
             s = t.decorate(s)
             t = t.next
         return s, t
+
+    def unwrap_to(self, visitor):
+        t = self
+        while isinstance(t, CWrap):
+            t.accept(visitor)
+            visitor.after_visit(t)
+            t = t.next
+        return t
+
+    def _decorate(self, s):
+        decorator = Decorator(s)
+        core = self.unwrap_to(decorator)
+        return core, decorator.result
     
     def define(self, var, indent, tab):
-        s1, core = self.wrap(var)
+        core, s1 = self._decorate(var)
         s2 = indent + core.partDef(indent, tab)
         return s2 + maybeSpace(s1) + ';\n'
 
@@ -31,7 +44,7 @@ class CType(object):
 
     @property
     def sig(self):
-        s1, core = self.wrap('')
+        core, s1 = self._decorate('')
         s2 = CType.extractPrefix(core)
         return s2 + maybeSpace(s1)
 
@@ -150,44 +163,6 @@ class CUnion(CTree):
     def keyword(self):
         return 'union'
 
-class CWrap(CType):
-    # (abstract) decorate(s)
-    pass
-
-class CPtr(CWrap):
-    def __init__(self, next):
-        self.next = next
-
-    # (impl)
-    def decorate(self, s):
-        if isinstance(self.next, CArr) or isinstance(self.next, CFunc):
-            return '(*' + s + ')'
-        else:
-            return '*' + s
-
-class CArr(CWrap):
-    def __init__(self, next, len):
-        self.next = next
-        self.len = len
-    
-    # (impl)
-    def decorate(self, s):
-        return s + '[' + str(self.len) + ']'
-
-class CFunc(CWrap):
-    def __init__(self, retType):
-        self.next = retType
-        self.args = []
-    
-    @property
-    def retType(self):
-        return self.next
-        
-    def add(self, type):
-        self.args.append(type)
-    
-    def decorate(self, s):
-        return s + '(' + ', '.join(map(lambda arg: arg.sig, self.args)) + ')'
 
 class TypeAttr(object):
     def __init__(self, name, num):
@@ -231,15 +206,100 @@ class CAttrTerm(CTerm):
     def partDef(self, indent, tab):
         return self.attrStr + ' ' + self.__type.partDef(indent, tab)
 
+########################################
+class CWrap(CType):
+    pass
+
+class CPtr(CWrap):
+    def __init__(self, next):
+        self.next = next
+
+    def accept(self, visitor):
+        visitor.visit_ptr(self)
+
+class CArr(CWrap):
+    def __init__(self, next, len):
+        self.next = next
+        self.len = len
+
+    def accept(self, visitor):
+        visitor.visit_arr(self)
+
+class CFunc(CWrap):
+    def __init__(self, retType):
+        self.next = retType
+        self.args = []
+    
+    @property
+    def retType(self):
+        return self.next
+        
+    def add(self, type):
+        self.args.append(type)
+
+    def accept(self, visitor):
+        visitor.visit_func(self)
+
 class CBits(CWrap):
     def __init__(self, baseType, len):
         self.next = baseType
         self.len = len
-    
-    # (impl)
-    def decorate(self, s):
-        return s + ' : ' + str(self.len)
 
+    def accept(self, visitor):
+        visitor.visit_bits(self)
+
+class WrapVisitor(object):
+    
+    def after_visit(self, t):
+        pass
+    
+    def visit_arr(self, t):
+        pass
+    
+    def visit_ptr(self, t):
+        pass
+    
+    def visit_func(self, t):
+        pass
+    
+    def visit_bits(self, t):
+        pass
+
+class Decorator(WrapVisitor):
+
+    def __init__(self, s):
+        self._s = s
+        self._last_is_ptr = False
+
+    def after_visit(self, t):
+        self._last_is_ptr = isinstance(t, CPtr)
+
+    def _maybe_paren(self, s):
+        return '(' + s + ')' if self._last_is_ptr else s
+
+    def visit_arr(self, t):
+        self._s = self._maybe_paren(self._s) + '[' + str(t.len) + ']'
+
+    def visit_ptr(self, t):
+        self._s = '*' + self._s
+
+    def _func_args_str(self, func):
+        if not func.args:
+            return 'void'
+        else:
+            return ', '.join(map(lambda t: t.sig, func.args))
+
+    def visit_func(self, t):
+        self._s = self._maybe_paren(self._s) + '(' + self._func_args_str(t) + ')'
+
+    def visit_bits(self, t):
+        self._s += ' : ' + str(t.len);
+    
+    @property
+    def result(self):
+        return self._s
+
+########################################        
 class PrimTypes(object):
     VOID        = CPrim('void')
     WCHAR       = CPrim('wchar_t')
@@ -268,9 +328,10 @@ class Locator(object):
     def find(self, id):
         self.__index += 1
         child = self.__elem[self.__index]
-        print 'cur id = ', child.attrib['id']
-        print 'expected id =', id
-        assert int(child.attrib['id']) == id
+        # assert int(child.attrib['id']) == id
+        # BELOW: for TEST purposes
+        if int(child.attrib['id']) != id:
+            return self.__elem.findall(".//*[@id='%s']" % id)[0]
         return child
 
 class XmlParser(object):
