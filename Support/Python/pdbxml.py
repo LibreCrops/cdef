@@ -1,4 +1,7 @@
+# -*- coding: utf-8 -*-
+
 import xml.etree.ElementTree as et
+from collections import deque
 #====================================================================#
 def maybe_space(s):
     return ' ' + s if s else ''
@@ -395,15 +398,15 @@ class XmlParser(object):
         tree = et.parse(path)
         root = tree.getroot()
         self.root = root
-        self._locFunc = Locator(root[0])
-        self._locUnnamed = Locator(root[1])
+        self._loc_func = Locator(root[0])
+        self._loc_unnamed = Locator(root[1])
         self._named = root[2]
     
     def _read_named(self, e_type):
         return self._read_group(e_type)
 
     def _read_unnamed(self, id):
-        e_unnamed = self._locUnnamed.find(id)
+        e_unnamed = self._loc_unnamed.find(id)
         return self._read_group(e_unnamed)
 
     def _read_group(self, e_type):
@@ -438,20 +441,20 @@ class XmlParser(object):
             t = self._read_type(e_field, True)
         return t
     
-    def _read_type(self, e_field, hasWrap):
+    def _read_type(self, e_field, has_wrap):
         attrs = e_field.attrib
         t = self._read_base(attrs['base'])
         if attrs.has_key('attr'):
             t = CAttrTerm(t, self._read_attr(attrs['attr']))
-        if hasWrap:
+        if has_wrap:
             t = self._read_wrap(attrs['wrap'], t)
         return t
     
     def _read_attr(self, attr):
-        attrSet = set()
+        attr_set = set()
         for s in attr.split():
-            attrSet.add(TypeAttrs.lookup(s))
-        return attrSet
+            attr_set.add(TypeAttrs.lookup(s))
+        return attr_set
     
     def _read_base(self, base):
         sigil = base[0]
@@ -459,7 +462,7 @@ class XmlParser(object):
         if sigil == '.':
             return self._read_prim(name)
         elif sigil == '$':
-            return self._read_typeRef(name)
+            return self._read_type_ref(name)
         else:
             return self._read_unnamed(int(name))
     
@@ -487,7 +490,7 @@ class XmlParser(object):
     def _read_prim(self, name):
         return XmlParser.__primTypes[name]
     
-    def _read_typeRef(self, name):
+    def _read_type_ref(self, name):
         return CTypeRef(name)
     
     def _read_wrap(self, wrap, t):
@@ -508,7 +511,7 @@ class XmlParser(object):
         return t
 
     def _read_func(self, id, t, conv):
-        e_func = self._locFunc.find(id)
+        e_func = self._loc_func.find(id)
         t = CFunc(t, conv)
         for e_arg in e_func:
             t.add(self._read_type(e_arg, True))
@@ -559,9 +562,265 @@ class Storage(object):
     def impls(self):
         return self._data
 
+    def choose_into(self, tree_sorter, enum_list):
+        for name, impls in self._data.items():
+            brace = impls[0].type
+            if isinstance(brace, CTree):
+                tree_sorter.add(name, brace)
+            else:
+                enum_list.append((name, brace))
+
 #====================================================================#
-parser = XmlParser('f:\\zzz.xml')
-st = Storage()
-st.begin_file(1)
-parser.read_to_storage(st)
-st.end_file()
+class Graph(object):
+    def __init__(self):
+        self.deps = {}
+    
+    def add(self, key, deps):
+        self.deps[key] = deps
+    
+    def vertices(self):
+        return self.deps.keys()
+    
+    def get_deps(self, key):
+        return self.deps[key]
+
+class TopoSorter(object):
+    def __init__(self):
+        self.back_deps = {}
+        self.num_deps = {}
+        self.starters = []
+
+    def add(self, key, deps):
+        num_deps = 0
+        for dep in deps:
+            if dep == key:
+                continue
+            num_deps += 1
+            back_dep_arr = self.back_deps.get(dep)
+            if not back_dep_arr:
+                back_dep_arr = []
+                self.back_deps[dep] = back_dep_arr
+            back_dep_arr.append(key)
+        self.num_deps[key] = num_deps
+        if num_deps == 0:
+            self.starters.append(key)
+
+    def read_graph(self, graph):
+        for vertex in graph.vertices():
+            self.add(vertex, graph.get_deps(vertex))
+    
+    def sort(self):
+        order = []
+        back_deps = self.back_deps
+        num_deps = self.num_deps
+        num_processed = 0
+        num_vertices = len(num_deps)
+        queue = deque(self.starters)
+        while queue:
+            vertex = queue.popleft()
+            num_processed += 1
+            order.append(vertex)
+            for next_vertex in (back_deps.get(vertex) or []):
+                num_deps[next_vertex] -= 1
+                if num_deps[next_vertex] == 0:
+                    queue.append(next_vertex)
+        assert num_processed == num_vertices, 'not DAG'
+        return order
+
+class TarjanVertex(object):
+    def __init__(self):
+        self.index = -1
+        self.lowlink = -1
+        self.on_stack = False
+    
+    @property
+    def touched(self):
+        return self.index >= 0
+    
+    def init(self, index):
+        self.index = index
+        self.lowlink = index
+
+# ref: https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
+class TarjanAlgo(object):
+    def __init__(self, graph):
+        self.stack = []
+        self.index = 0
+        self.graph = graph
+        self.vertices = graph.vertices()
+        self.props = {}
+        for vertex in self.vertices:
+            self.props[vertex] = TarjanVertex()
+        self.indices = {}
+        self.groups = []
+        self.group_index = 0
+    
+    def solve(self):
+        for vertex in self.vertices:
+            if not self.props[vertex].touched:
+                self.strong_connect(vertex)
+    
+    def strong_connect(self, vertex):
+        self.props[vertex].init(self.index)
+        self.index += 1
+        self.stack.append(vertex)
+        self.props[vertex].on_stack = True
+        
+        for next_vertex in self.graph.get_deps(vertex):
+            if not self.props[next_vertex].touched:
+                self.strong_connect(next_vertex)
+                self.props[vertex].lowlink = min(
+                    self.props[vertex].lowlink,
+                    self.props[next_vertex].lowlink
+                )
+            elif self.props[next_vertex].on_stack:
+                self.props[vertex].lowlink = min(
+                    self.props[vertex].lowlink,
+                    self.props[next_vertex].index
+                )
+        
+        if self.props[vertex].lowlink == self.props[vertex].index:
+            group = []
+            while True:
+                this_vertex = self.stack.pop()
+                self.props[this_vertex].on_stack = False
+                group.append(this_vertex)
+                self.indices[this_vertex] = self.group_index
+                if this_vertex == vertex:
+                    break
+            self.groups.append(group)
+            self.group_index += 1
+
+    def make_graph(self):
+        graph = Graph()
+        group_index = 0
+        for group in self.groups:
+            dep_indices = set()
+            for vertex in group:
+                for next_vertex in self.graph.get_deps(vertex):
+                    next_group_index = self.indices[next_vertex]
+                    dep_indices.add(next_group_index)
+            graph.add(group_index, list(dep_indices))
+            group_index += 1
+        return graph
+    
+#====================================================================#
+class TreeVertex(object):
+
+    def __init__(self, type, dep, use):
+        self.type = type
+        self.dep = dep
+        self.use = use
+        self.self_ref = False
+
+class TreeGraph(object):
+
+    def __init__(self, info):
+        self._info = info
+
+    def vertices(self):
+        return self._info.keys()
+
+    def get_deps(self, key):
+        return self._info[key].dep
+
+class TreeSorter(object):
+
+    def __init__(self):
+        self._info = {}
+
+    def add(self, name, tree):
+        self._info[name] = TreeVertex(tree, *tree.get_dep())
+
+    def pre_sort(self):
+        info = self._info
+        is_internal = lambda name: name in info
+        for v in info.values():
+            v.dep = filter(is_internal, v.dep)
+            v.use = filter(is_internal, v.use)
+
+    def _make_scc(self):
+        graph = TreeGraph(self._info)
+        scc = TarjanAlgo(graph)
+        scc.solve()
+        return scc
+
+    def _sort_scc(self, graph):
+        # NOTE: is this step necessary?
+        topo = TopoSorter()
+        topo.read_graph(graph)
+        return topo.sort()
+        
+    def sort(self):
+        result = []
+        scc = self._make_scc()
+        scc_graph = scc.make_graph()
+        scc_order = self._sort_scc(scc_graph)
+        for scc_index in scc_order:
+            names = scc.groups[scc_index]
+            if len(names) == 1:
+                if scc_index in scc_graph.get_deps(scc_index):
+                    self._info[names[0]].self_ref = True
+                result.append(names)
+            else:
+                topo = TopoSorter()
+                for name in names:
+                    topo.add(name,
+                             filter(lambda u: scc.indices[u] == scc_index,
+                                    self._info[name].use))
+                result.append(topo.sort())
+        return result
+
+#====================================================================#
+def try_():
+    global st
+    s_vt = CStruct()
+    method1 = CFunc(PrimTypes.INT)
+    method1.add(CPtr(CTypeRef('ICrazy')))
+    s_vt.add(method1, 'DoIt')
+    s_iface = CStruct()
+    s_iface.add(CPtr(CTypeRef('ICrazyVTable')), 'vt')
+    s_iface.add(CPtr(CTypeRef('IUnknown')), 'unk')
+    s_iface.add(CTypeRef('ICrazyVTable'), 'test_use')
+    s_com = CStruct()
+    s_com.add(CPtr(CTypeRef('ICrazy')), 'crazier')
+    s_node = CStruct()
+    s_node.add(CPtr(CTypeRef('Node')), 'prev')
+    s_node.add(CPtr(CTypeRef('Node')), 'next')
+
+    storage = Storage()
+    storage.begin_file(0)
+    storage.add('Node', s_node)
+    storage.add('Component', s_com)
+    storage.add('ICrazyVTable', s_vt)
+    storage.add('ICrazy', s_iface)
+    storage.end_file()
+
+    st = TreeSorter()
+    storage.choose_into(st, [])
+
+#====================================================================#
+class Session(object):
+
+    def __init__(self):
+        self._storage = Storage()
+        self._file_index = 0
+
+    def load(self, file_path):
+        parser = XmlParser(file_path)
+        self._storage.begin_file(self._file_index)
+        parser.read_to_storage(self._storage)
+        self._storage.end_file()
+        self._file_index += 1
+
+    def write_header(self, file_path):
+        tree_sorter = TreeSorter()
+        enum_list = []
+        self._storage.choose_into(tree_sorter, enum_list)
+        tree_sorter.pre_sort()
+        groups = tree_sorter.sort()
+        return groups, enum_list
+    
+#====================================================================#
+s = Session()
+s.load('f:\\ntkrnlmp.xml')
