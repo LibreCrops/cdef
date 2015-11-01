@@ -63,6 +63,24 @@ class CType(object):
         t, _ = self._search_dep(dep)
         assert isinstance(t, CPrefix)
 
+    def same_as(self, other):
+        r = self
+        s = other
+        while True:
+            if (isinstance(r, CWrap) and
+                isinstance(s, CWrap) and
+                r.same_wrap_as(s)
+            ):
+                r = r.next
+                s = s.next
+            else:
+                break
+        if isinstance(r, CPrim) and isinstance(s, CPrim):
+            return r is s
+        if isinstance(r, CTypeRef) and isinstance(s, CTypeRef):
+            return r.name == s.name
+        return False
+
 class CTerm(CType):
     # (abstract) part_def
     pass
@@ -233,7 +251,18 @@ class CAttrTerm(CTerm):
 
 ########################################
 class CWrap(CType):
-    pass
+
+    # (abstract) accept
+
+    def judger(self):
+        visitor = SameJudgerVisitor()
+        self.accept(visitor)
+        return visitor.judger
+    
+    def same_wrap_as(self, other):
+        visitor = self.judger()
+        other.accept(visitor)
+        return visitor.same
 
 class CPtr(CWrap):
     def __init__(self, next):
@@ -357,7 +386,7 @@ class DepSearcher(WrapVisitor):
         for arg in t.args:
             arg.search_depending(self._dep_set)
     
-########################################        
+########################################
 class PrimTypes(object):
     VOID        = CPrim('void')
     WCHAR       = CPrim('wchar_t')
@@ -800,6 +829,203 @@ def try_():
     storage.choose_into(st, [])
 
 #====================================================================#
+class SameWrapVisitor(WrapVisitor):
+
+    def __init__(self):
+        self.same = False
+
+class SamePtrVisitor(SameWrapVisitor):
+
+    def visit_ptr(self, t):
+        self.same = True
+
+class SameArrVisitor(SameWrapVisitor):
+
+    def __init__(self, arr):
+        super(SameArrVisitor, self).__init__()
+        self._len = arr.len
+
+    def visit_arr(self, t):
+        if t.len == self._len:
+            self.same = True
+
+class SameFuncVisitor(SameWrapVisitor):
+
+    def __init__(self, func):
+        super(SameFuncVisitor, self).__init__()
+        self._args = func.args
+        self._expected_len = len(func.args)
+
+    def visit_func(self, t):
+        if len(t.args) == self._expected_len:
+            same = True
+            for i in range(0, self._expected_len):
+                if not self._args[i].same_as(t.args[i]):
+                    same = False
+                    break
+            self.same = same
+
+class SameJudgerVisitor(WrapVisitor):
+
+    def __init__(self):
+        self.judger = None
+    
+    def visit_ptr(self, t):
+        self.judger = SamePtrVisitor()
+
+    def visit_arr(self, t):
+        self.judger = SameArrVisitor(t)
+
+    def visit_func(self, t):
+        self.judger = SameFuncVisitor(t)
+
+    def visit_bits(self, t):
+        assert False, 'should not be here'
+
+def try2():
+    t1 = CFunc(PrimTypes.VOID)
+    t2 = CFunc(PrimTypes.VOID)
+    t1.add(PrimTypes.INT)
+    t2.add(PrimTypes.INT)
+    print t1.same_as(t2)
+
+class NextStateSetVisitor(WrapVisitor):
+
+    def __init__(self, cur_state):
+        self._state = cur_state
+        self.set = None
+
+    def visit_ptr(self, t):
+        self.set = self._state.ptr_nexts
+
+    def visit_arr(self, t):
+        self.set = self._state.arr_nexts
+
+    def visit_func(self, t):
+        self.set = self._state.func_nexts
+
+    def visit_bits(self, t):
+        assert False, 'should not be here'
+    
+class MatcherState(object):
+
+    def __init__(self):
+        self.reduction = None
+        self.ptr_nexts = []
+        self.arr_nexts = []
+        self.func_nexts = []
+
+    def has_reduction(self):
+        return self.reduction is not None
+
+    def get_next_state_set(self, t):
+        visitor = NextStateSetVisitor(self)
+        t.accept(visitor)
+        return visitor.set
+
+    @staticmethod
+    def _find_state(set, r):
+        for s, next in set:
+            if r.same_wrap_as(s):
+                return next
+        return None
+        
+    def translate(self, r):
+        next_state_set = self.get_next_state_set(r)
+        return MatcherState._find_state(next_state_set, r)
+
+    def translate_or_grow(self, r):
+        next_state_set = self.get_next_state_set(r)
+        next_state = MatcherState._find_state(next_state_set, r)
+        if next_state is None:
+            next_state = MatcherState()
+            next_state_set.append((r, next_state))
+        return next_state
+
+class WrapCopyVisitor(object):
+
+    def __init__(self, core):
+        self.result = core
+
+    def visit_ptr(self, t):
+        self.result = CPtr(self.result)
+
+    def visit_arr(self, t):
+        self.result = CArr(self.result, t.len)
+
+    def visit_func(self, t):
+        func = CFunc(self.result)
+        for arg in t.args:
+            func.add(arg)
+        self.result = func
+
+class Matcher(object):
+
+    def __init__(self):
+        self._starts = {}
+
+    def _get_start_state(self, base_type):
+        # assume only prim types now
+        return self._starts.get(base_type)
+
+    def _get_or_create_start_state(self, base_type):
+        state = self._get_start_state(base_type)
+        if state is None:
+            state = MatcherState()
+            self._starts[base_type] = state
+        return state
+
+    @staticmethod
+    def _expand_type(t):
+        stack = []
+        while isinstance(t, CWrap):
+            stack.insert(0, t)
+            t = t.next
+        return t, stack
+        
+    def add_rule(self, type, name):
+        core, wraps = Matcher._expand_type(type)
+        state = self._get_or_create_start_state(core)
+        for wrap in wraps:
+            state = state.translate_or_grow(wrap)
+        state.reduction = CTypeRef(name)
+
+    def reduct(self, type):
+        core, wraps = Matcher._expand_type(type)
+        result = core
+        succeed = -1
+        ahead = 0
+        state = self._get_start_state(core)
+        while state is not None:
+            if state.has_reduction():
+                succeed = ahead
+                result = state.reduction
+            if ahead == len(wraps):
+                break
+            state = state.translate(wraps[ahead])
+            ahead += 1
+        if succeed >= 0:
+            visitor = WrapCopyVisitor(result)
+            for wrap in wraps[succeed:]:
+                wrap.accept(visitor)
+            return visitor.result
+        else:
+            return type
+
+def try3():
+    global m
+    m = Matcher()
+    m.add_rule(PrimTypes.INT, 'INT')
+    m.add_rule(CPtr(PrimTypes.INT), 'PINT')
+    m.add_rule(CPtr(CPtr(PrimTypes.VOID)), 'PPVOID')
+    t1 = PrimTypes.INT
+    print m.reduct(t1).define('x', '....', '    ')
+
+try3()
+#====================================================================#
+# TODO: the outputer
+
+#====================================================================#
 class Session(object):
 
     def __init__(self):
@@ -823,4 +1049,3 @@ class Session(object):
     
 #====================================================================#
 s = Session()
-s.load('f:\\ntkrnlmp.xml')
