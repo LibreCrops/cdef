@@ -1170,7 +1170,13 @@ def try5():
     print mk.mixed_def()
     
 # try5()
-    
+
+#====================================================================#
+def setup_goo_matcher(m):
+    m.add_rule(PrimTypes.INT, 'INT')
+    m.add_rule(CPtr(PrimTypes.VOID), 'PVOID')
+    m.add_rule(CPtr(CPtr(PrimTypes.VOID)), 'PPVOID')
+
 #====================================================================#
 class Session(object):
 
@@ -1192,6 +1198,7 @@ class Session(object):
         tree_sorter.pre_sort()
         groups = tree_sorter.sort()
         definer = Definer()
+        setup_goo_matcher(definer.matcher)
         definer.matcher.tree_names_list= tree_sorter.name_list()
 
         separator = ('/' * 79) + '\n'
