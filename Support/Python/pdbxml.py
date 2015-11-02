@@ -1,8 +1,9 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 
 import sys
 import xml.etree.ElementTree as et
 from collections import deque
+from operator import attrgetter
 #====================================================================#
 def maybe_space(s):
     return ' ' + s if s else ''
@@ -28,7 +29,7 @@ class CType(object):
         decorator = Decorator(definer, s)
         core = t.unwrap_to(decorator)
         return core, decorator.result
-    
+
     def define(self, var, definer, indent):
         core, s1 = self._decorate(definer, var)
         s2 = indent + core.part_def(definer, indent)
@@ -38,7 +39,7 @@ class CType(object):
     def get_prefix(t):
         assert isinstance(t, CPrefix)
         return t.prefix
-    
+
     @staticmethod
     def extract_prefix(t):
         if isinstance(t, CAttrTerm):
@@ -58,7 +59,7 @@ class CType(object):
         if isinstance(core, CTypeRef):
             dep.add(core.name)
         return core, searcher.has_ptr
-    
+
     def search_depending_and_using(self, dep, use):
         t, has_ptr = self._search_dep(dep)
         if isinstance(t, CTypeRef) and not has_ptr:
@@ -120,14 +121,14 @@ class CBrace(CTerm):
     # (abstract) child_def(indent, tab)
     def qualified_name(self, inner_name):
         return self.keyword + maybe_space(inner_name)
-    
+
     def def_body(self, definer, indent):
         s = ''
         s += indent + '{' + '\n'
         s += self.child_def(definer, indent + definer.tab)
         s += indent + '}'
         return s
-    
+
     # (impl)
     def part_def(self, definer, indent):
         return self.keyword + '\n' + self.def_body(definer, indent)
@@ -140,24 +141,24 @@ class CEnumEntry:
 class CEnum(CBrace):
     def __init__(self):
         self.__entries = []
-    
+
     def add(self, name, val):
         self.__entries.append(CEnumEntry(name, val))
-    
+
     @property
     def entries(self):
         return self.__entries
-    
+
     # (impl)
     @property
     def keyword(self):
         return 'enum'
-    
+
     # (impl)
     def child_def(self, definer, indent):
         if not self.__entries:
             return ''
-        
+
         s = ''
         last = self.__entries[-1]
         for e in self.__entries:
@@ -176,14 +177,14 @@ class CTreeEntry:
 class CTree(CBrace):
     def __init__(self):
         self.__entries = []
-    
+
     def add(self, type, name, offset = 0):
         self.__entries.append(CTreeEntry(type, name, offset))
-    
+
     @property
     def members(self):
         return self.__entries
-    
+
     # (impl)
     def child_def(self, definer, indent):
         s = ''
@@ -218,10 +219,10 @@ class TypeAttr(object):
     def __init__(self, name, num):
         self.__name = name
         self.__num = num
-    
+
     def __cmp__(self, other):
         return cmp(self.__num, other.__num)
-    
+
     @property
     def name(self):
         return self.__name
@@ -243,11 +244,11 @@ class CAttrTerm(CTerm):
     def __init__(self, type, attrs):
         self.__type = type
         self.__attrs = attrs
-    
+
     @property
     def core_type(self):
         return self.__type
-    
+
     @property
     def attr_str(self):
         return ' '.join(map(lambda attr: attr.name, sorted(self.__attrs)))
@@ -265,7 +266,7 @@ class CWrap(CType):
         visitor = SameJudgerVisitor()
         self.accept(visitor)
         return visitor.judger
-    
+
     def same_wrap_as(self, other):
         visitor = self.judger()
         other.accept(visitor)
@@ -300,17 +301,17 @@ class CFunc(CWrap):
         self.next = ret_type
         self.args = []
         self.call_conv = call_conv
-    
+
     @property
     def ret_type(self):
         return self.next
-        
+
     def add(self, type):
         self.args.append(type)
-        
+
     def accept(self, visitor):
         visitor.visit_func(self)
-        
+
 class CBits(CWrap):
     def __init__(self, base_type, len):
         self.next = base_type
@@ -320,19 +321,19 @@ class CBits(CWrap):
         visitor.visit_bits(self)
 
 class WrapVisitor(object):
-    
+
     def after_visit(self, t):
         pass
-    
+
     def visit_arr(self, t):
         pass
-    
+
     def visit_ptr(self, t):
         pass
-    
+
     def visit_func(self, t):
         pass
-    
+
     def visit_bits(self, t):
         pass
 
@@ -367,7 +368,7 @@ class Decorator(WrapVisitor):
             return s
         else:
             return conv.keyword + ' ' + s
-        
+
     def visit_func(self, t):
         self._s = (
             self._maybe_paren(Decorator._with_call_conv(self._s, t.call_conv)) +
@@ -375,7 +376,7 @@ class Decorator(WrapVisitor):
 
     def visit_bits(self, t):
         self._s += ' : ' + str(t.len);
-    
+
     @property
     def result(self):
         return self._s
@@ -392,18 +393,18 @@ class DepSearcher(WrapVisitor):
     def visit_func(self, t):
         for arg in t.args:
             arg.search_depending(self._dep_set)
-    
+
 ########################################
 class PrimTypes(object):
     VOID        = CPrim('void')
     WCHAR       = CPrim('wchar_t')
-    
+
     CHAR        = CPrim('char')
     INT         = CPrim('int')
     SHORT       = CPrim('short')
     LONG        = CPrim('long')
     LONGLONG    = CPrim('__int64')
-    
+
     UCHAR       = CPrim('unsigned char')
     UINT        = CPrim('unsigned int')
     USHORT      = CPrim('unsigned short')
@@ -425,7 +426,7 @@ class Locator(object):
         # assert int(child.attrib['id']) == id
         # BELOW: for TEST purposes
         if int(child.attrib['id']) != id:
-            print "warn: need id %d but current id is %s" % (id, child.attrib['id'])
+            print("warn: need id %d but current id is %s" % (id, child.attrib['id']))
             return self._elem.findall(".//*[@id='%s']" % id)[0]
         return child
 
@@ -437,7 +438,7 @@ class XmlParser(object):
         self._loc_func = Locator(root[0])
         self._loc_unnamed = Locator(root[1])
         self._named = root[2]
-    
+
     def _read_named(self, e_type):
         return self._read_group(e_type)
 
@@ -468,7 +469,7 @@ class XmlParser(object):
             val = e_const.attrib['val']
             t.add(name, val)
         return t
-    
+
     def _read_field(self, e_field):
         if e_field.tag == 'bit-field':
             t = self._read_type(e_field, False)
@@ -476,22 +477,22 @@ class XmlParser(object):
         else:
             t = self._read_type(e_field, True)
         return t
-    
+
     def _read_type(self, e_field, has_wrap):
         attrs = e_field.attrib
         t = self._read_base(attrs['base'])
-        if attrs.has_key('attr'):
+        if 'attr' in attrs:
             t = CAttrTerm(t, self._read_attr(attrs['attr']))
         if has_wrap:
             t = self._read_wrap(attrs['wrap'], t)
         return t
-    
+
     def _read_attr(self, attr):
         attr_set = set()
         for s in attr.split():
             attr_set.add(TypeAttrs.lookup(s))
         return attr_set
-    
+
     def _read_base(self, base):
         sigil = base[0]
         name = base[1:]
@@ -501,12 +502,12 @@ class XmlParser(object):
             return self._read_type_ref(name)
         else:
             return self._read_unnamed(int(name))
-    
+
     # TODO define this as a class var
     __primTypes = {
         'VOID':         PrimTypes.VOID,
         'WCHAR':        PrimTypes.WCHAR,
-        
+
         'CHAR':         PrimTypes.CHAR,
         'UCHAR':        PrimTypes.UCHAR,
         'SHORT':        PrimTypes.SHORT,
@@ -515,20 +516,20 @@ class XmlParser(object):
         'UINT':         PrimTypes.UINT,
         'LONG':         PrimTypes.LONG,
         'ULONG':        PrimTypes.ULONG,
-        
+
         'LONGLONG':     PrimTypes.LONGLONG,
         'ULONGLONG':    PrimTypes.ULONGLONG,
-        
+
         'FLOAT':        PrimTypes.FLOAT,
         'DOUBLE':       PrimTypes.DOUBLE,
     }
-    
+
     def _read_prim(self, name):
         return XmlParser.__primTypes[name]
-    
+
     def _read_type_ref(self, name):
         return CTypeRef(name)
-    
+
     def _read_wrap(self, wrap, t):
         arr = wrap.split()
         i = 0
@@ -565,7 +566,7 @@ class ImplItem(object):
         self.type = type
         self.file = file
         self.index = index
-    
+
 class Storage(object):
 
     def __init__(self):
@@ -610,13 +611,13 @@ class Storage(object):
 class Graph(object):
     def __init__(self):
         self.deps = {}
-    
+
     def add(self, key, deps):
         self.deps[key] = deps
-    
+
     def vertices(self):
         return self.deps.keys()
-    
+
     def get_deps(self, key):
         return self.deps[key]
 
@@ -644,7 +645,7 @@ class TopoSorter(object):
     def read_graph(self, graph):
         for vertex in graph.vertices():
             self.add(vertex, graph.get_deps(vertex))
-    
+
     def sort(self):
         order = []
         back_deps = self.back_deps
@@ -668,11 +669,11 @@ class TarjanVertex(object):
         self.index = -1
         self.lowlink = -1
         self.on_stack = False
-    
+
     @property
     def touched(self):
         return self.index >= 0
-    
+
     def init(self, index):
         self.index = index
         self.lowlink = index
@@ -690,18 +691,18 @@ class TarjanAlgo(object):
         self.indices = {}
         self.groups = []
         self.group_index = 0
-    
+
     def solve(self):
         for vertex in self.vertices:
             if not self.props[vertex].touched:
                 self.strong_connect(vertex)
-    
+
     def strong_connect(self, vertex):
         self.props[vertex].init(self.index)
         self.index += 1
         self.stack.append(vertex)
         self.props[vertex].on_stack = True
-        
+
         for next_vertex in self.graph.get_deps(vertex):
             if not self.props[next_vertex].touched:
                 self.strong_connect(next_vertex)
@@ -714,7 +715,7 @@ class TarjanAlgo(object):
                     self.props[vertex].lowlink,
                     self.props[next_vertex].index
                 )
-        
+
         if self.props[vertex].lowlink == self.props[vertex].index:
             group = []
             while True:
@@ -739,7 +740,7 @@ class TarjanAlgo(object):
             graph.add(group_index, list(dep_indices))
             group_index += 1
         return graph
-    
+
 #====================================================================#
 class TreeVertex(object):
 
@@ -786,7 +787,7 @@ class TreeSorter(object):
         topo = TopoSorter()
         topo.read_graph(graph)
         return topo.sort()
-        
+
     def sort(self):
         result = []
         scc = self._make_scc()
@@ -885,7 +886,7 @@ class SameJudgerVisitor(WrapVisitor):
 
     def __init__(self):
         self.judger = None
-    
+
     def visit_ptr(self, t):
         self.judger = SamePtrVisitor()
 
@@ -903,7 +904,7 @@ def try2():
     t2 = CFunc(PrimTypes.VOID)
     t1.add(PrimTypes.INT)
     t2.add(PrimTypes.INT)
-    print t1.same_as(t2)
+    print(t1.same_as(t2))
 
 class NextStateSetVisitor(WrapVisitor):
 
@@ -922,7 +923,7 @@ class NextStateSetVisitor(WrapVisitor):
 
     def visit_bits(self, t):
         assert False, 'should not be here'
-    
+
 class MatcherState(object):
 
     def __init__(self):
@@ -945,7 +946,7 @@ class MatcherState(object):
             if r.same_wrap_as(s):
                 return next
         return None
-        
+
     def translate(self, r):
         next_state_set = self.get_next_state_set(r)
         return MatcherState._find_state(next_state_set, r)
@@ -965,7 +966,7 @@ class MatcherStateAllCapital(object):
 
     def has_reduction(self):
         return False
-        
+
     def translate(self, r):
         if isinstance(r, CPtr):
             return MatcherStateAllCapitalPtr(self.name)
@@ -979,11 +980,11 @@ class MatcherStateAllCapitalPtr(object):
 
     def has_reduction(self):
         return True
-    
+
     @property
     def reduction(self):
         return CTypeRef("P" + self.name)
-        
+
     def translate(self, r):
         return None
 
@@ -1012,7 +1013,7 @@ class Matcher(object):
 
     def _tree_exists(self, name):
         return name in self.tree_names_list
-        
+
     def _get_start_state(self, core):
         if isinstance(core, CTypeRef):
             name = core.name
@@ -1037,7 +1038,7 @@ class Matcher(object):
             stack.insert(0, t)
             t = t.next
         return t, stack
-        
+
     def add_rule(self, type, name):
         core, wraps = Matcher._expand_type(type)
         assert isinstance(core, CPrefix)
@@ -1045,7 +1046,7 @@ class Matcher(object):
         for wrap in wraps:
             state = state.translate_or_grow(wrap)
         state.reduction = CTypeRef(name)
-        
+
     def reduct(self, type):
         core, wraps = Matcher._expand_type(type)
         result = core
@@ -1075,7 +1076,7 @@ def try3():
     m.add_rule(CPtr(PrimTypes.INT), 'PINT')
     m.add_rule(CPtr(CPtr(PrimTypes.VOID)), 'PPVOID')
     t1 = PrimTypes.INT
-    print m.reduct(t1).define('x', '....', '    ')
+    print(m.reduct(t1).define('x', '....', '    '))
 
 # try3()
 #====================================================================#
@@ -1097,7 +1098,7 @@ class Definer(object):
 class BraceDefMaker(object):
 
     END_DEF = ';\n'
-    
+
     @staticmethod
     def make_typedef_args(type, name):
         if isinstance(type, CEnum) or not is_all_capital(name):
@@ -1113,7 +1114,7 @@ class BraceDefMaker(object):
         else:
             mixed_inner_name = inner_name
         return inner_name, mixed_inner_name
-        
+
     def __init__(self, name, type, definer):
         self._inner_name, self._mixed_inner_name = (
             BraceDefMaker.make_inner_names(type, name))
@@ -1133,7 +1134,7 @@ class BraceDefMaker(object):
             indent + "typedef " + self._type.qualified_name(inner_name) +
             def_body + " " + self._typedef_args +
             BraceDefMaker.END_DEF)
-    
+
     def typedef(self, indent = ''):
         return self._typedef(indent, self._inner_name, '')
 
@@ -1165,18 +1166,17 @@ def try5():
     e1.add('GREEN', 20)
     e1.add('BLUE', 30)
     mk = BraceDefMaker('TEST16', e1, d)
-    print mk.typedef()
-    print mk.pure_def()
-    print mk.mixed_def()
-    
+    print(mk.typedef())
+    print(mk.pure_def())
+    print(mk.mixed_def())
+
 # try5()
 
 #====================================================================#
 def setup_goo_matcher(m):
-    m.add_rule(PrimTypes.INT, 'INT')
-    m.add_rule(CPtr(PrimTypes.VOID), 'PVOID')
-    m.add_rule(CPtr(CPtr(PrimTypes.VOID)), 'PPVOID')
-
+    for i in dir(PrimTypes):
+        if i.isupper():
+            m.add_rule(attrgetter(i)(PrimTypes), i)
 #====================================================================#
 class Session(object):
 
@@ -1204,13 +1204,13 @@ class Session(object):
         separator = ('/' * 79) + '\n'
 
         file_handle.write(separator)
-        
+
         for name, type in enum_list:
             file_handle.write(BraceDefMaker(name, type, definer).mixed_def())
             file_handle.write('\n')
 
         file_handle.write(separator)
-            
+
         for group in groups:
             if (len(group) == 1 and
                 not tree_sorter.is_type_recursive(group[0])
@@ -1228,17 +1228,18 @@ class Session(object):
                 for maker in makers:
                     file_handle.write(maker.typedef())
                 file_handle.write('\n')
-                
+
                 for maker in makers:
                     file_handle.write(maker.pure_def())
                 file_handle.write('\n')
-                    
+
     def write_header_to_file(self, file_path):
         f = open(file_path, 'w')
         self.write_header(f)
         f.close()
-    
+
 #====================================================================#
 s = Session()
-s.load('f:\\ntkrnlmp.xml')
-s.write_header()
+for i in sys.argv[1:]:
+    s.load(i)
+    s.write_header()
