@@ -16,14 +16,15 @@ class CType(object):
             t = t.next
         return t
 
-    def _decorate(self, s):
-        decorator = Decorator(s)
-        core = self.unwrap_to(decorator)
+    def _decorate(self, definer, s):
+        t = definer._reduct(self)
+        decorator = Decorator(definer, s)
+        core = t.unwrap_to(decorator)
         return core, decorator.result
     
-    def define(self, var, indent, tab):
-        core, s1 = self._decorate(var)
-        s2 = indent + core.part_def(indent, tab)
+    def define(self, var, definer, indent):
+        core, s1 = self._decorate(definer, var)
+        s2 = indent + core.part_def(definer, indent)
         return s2 + maybe_space(s1) + ';\n'
 
     @staticmethod
@@ -38,9 +39,8 @@ class CType(object):
         else:
             return CType.get_prefix(t)
 
-    @property
-    def sig(self):
-        core, s1 = self._decorate('')
+    def sig(self, definer):
+        core, s1 = self._decorate(definer, '')
         s2 = CType.extract_prefix(core)
         return s2 + maybe_space(s1)
 
@@ -87,7 +87,7 @@ class CTerm(CType):
 
 class CPrefix(CTerm):
     # (abstract property) prefix
-    def part_def(self, indent, tab):
+    def part_def(self, definer, indent):
         return self.prefix
 
 class CPrim(CPrefix):
@@ -114,16 +114,16 @@ class CBrace(CTerm):
     def qualified_name(self, inner_name):
         return self.keyword + maybe_space(inner_name)
     
-    def def_body(self, indent, tab):
+    def def_body(self, definer, indent):
         s = ''
         s += indent + '{' + '\n'
-        s += self.child_def(indent + tab, tab)
+        s += self.child_def(definer, indent + definer.tab)
         s += indent + '}'
         return s
     
     # (impl)
-    def part_def(self, indent, tab):
-        return self.keyword + '\n' + self.def_body(indent, tab)
+    def part_def(self, definer, indent):
+        return self.keyword + '\n' + self.def_body(definer, indent)
 
 class CEnumEntry:
     def __init__(self, name, val):
@@ -147,7 +147,7 @@ class CEnum(CBrace):
         return 'enum'
     
     # (impl)
-    def child_def(self, indent, tab):
+    def child_def(self, definer, indent):
         if not self.__entries:
             return ''
         
@@ -178,10 +178,10 @@ class CTree(CBrace):
         return self.__entries
     
     # (impl)
-    def child_def(self, indent, tab):
+    def child_def(self, definer, indent):
         s = ''
         for e in self.__entries:
-            s += e.type.define(e.name, indent, tab)
+            s += definer.define(e.type, e.name, indent)
         return s
 
     def search_depending_and_using(self, dep, use):
@@ -331,7 +331,8 @@ class WrapVisitor(object):
 
 class Decorator(WrapVisitor):
 
-    def __init__(self, s):
+    def __init__(self, definer, s):
+        self._definer = definer
         self._s = s
         self._last_is_ptr = False
 
@@ -347,12 +348,11 @@ class Decorator(WrapVisitor):
     def visit_ptr(self, t):
         self._s = '*' + self._s
 
-    @staticmethod
-    def _func_args_str(func):
+    def _func_args_str(self, func):
         if not func.args:
             return 'void'
         else:
-            return ', '.join(map(lambda t: t.sig, func.args))
+            return ', '.join(map(lambda t: t.sig(self._definer), func.args))
 
     @staticmethod
     def _with_call_conv(s, conv):
@@ -364,7 +364,7 @@ class Decorator(WrapVisitor):
     def visit_func(self, t):
         self._s = (
             self._maybe_paren(Decorator._with_call_conv(self._s, t.call_conv)) +
-            '(' + Decorator._func_args_str(t) + ')')
+            '(' + self._func_args_str(t) + ')')
 
     def visit_bits(self, t):
         self._s += ' : ' + str(t.len);
@@ -942,6 +942,33 @@ class MatcherState(object):
             next_state_set.append((r, next_state))
         return next_state
 
+class MatcherStateAllCapital(object):
+
+    def __init__(self, name):
+        self.name = name
+
+    @property
+    def reduction(self):
+        return None
+    
+    def translate(self, r):
+        if isinstance(r, CPtr):
+            return MatcherStateAllCapitalPtr(name)
+        else:
+            return None
+
+class MatcherStateAllCapitalPtr(object):
+
+    def __init__(self, name):
+        self.name = name
+
+    @property
+    def reduction(self):
+        return "P" + self.name
+        
+    def translate(self, r):
+        return None
+
 class WrapCopyVisitor(object):
 
     def __init__(self, core):
@@ -963,10 +990,19 @@ class Matcher(object):
 
     def __init__(self):
         self._starts = {}
+        self.structs_list = []
 
-    def _get_start_state(self, base_type):
-        # assume only prim types now
-        return self._starts.get(base_type)
+    def _struct_exists(self, name):
+        return name in self.structs_list
+        
+    def _get_start_state(self, core):
+        if isinstance(core, CTypeRef):
+            if self._struct_exist(core.name):
+                return MatcherAllCapital(core.name)
+            else:
+                return None
+        else:
+            return self._starts.get(core)
 
     def _get_or_create_start_state(self, base_type):
         state = self._get_start_state(base_type)
@@ -985,11 +1021,12 @@ class Matcher(object):
         
     def add_rule(self, type, name):
         core, wraps = Matcher._expand_type(type)
+        assert isinstance(core, CPrefix)
         state = self._get_or_create_start_state(core)
         for wrap in wraps:
             state = state.translate_or_grow(wrap)
         state.reduction = CTypeRef(name)
-
+        
     def reduct(self, type):
         core, wraps = Matcher._expand_type(type)
         result = core
@@ -1021,9 +1058,36 @@ def try3():
     t1 = PrimTypes.INT
     print m.reduct(t1).define('x', '....', '    ')
 
-try3()
+# try3()
 #====================================================================#
 # TODO: the outputer
+
+class Definer(object):
+
+    def __init__(self, tab = '    '):
+        self.tab = tab
+        self.matcher = Matcher()
+
+    def define(self, type, var, indent = ''):
+        return type.define(var, self, indent)
+
+    def sig(self, type):
+        return type.sig
+
+    def _reduct(self, type):
+        return self.matcher.reduct(type)
+    
+def try4():
+    d = Definer()
+    m = d.matcher
+    f1 = CFunc(PrimTypes.INT)
+    f1.add(CPtr(CPtr(PrimTypes.VOID)))
+    m.add_rule(CPtr(PrimTypes.VOID), 'PVOID')
+    m.add_rule(PrimTypes.INT, 'INT')
+    # m.add_rule(CPtr(f1), 'MY_PROC')
+    print d.define(CPtr(f1), 'x')
+
+try4()
 
 #====================================================================#
 class Session(object):
