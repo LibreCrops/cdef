@@ -922,7 +922,7 @@ class NextStateSetVisitor(WrapVisitor):
         self.set = self._state.func_nexts
 
     def visit_bits(self, t):
-        assert False, 'should not be here'
+        self.set = []
 
 class MatcherState(object):
 
@@ -953,6 +953,7 @@ class MatcherState(object):
 
     def translate_or_grow(self, r):
         next_state_set = self.get_next_state_set(r)
+        assert not isinstance(r, CBits)
         next_state = MatcherState._find_state(next_state_set, r)
         if next_state is None:
             next_state = MatcherState()
@@ -1004,6 +1005,9 @@ class WrapCopyVisitor(object):
         for arg in t.args:
             func.add(arg)
         self.result = func
+
+    def visit_bits(self, t):
+        self.result = CBits(self.result, t.len)
 
 class Matcher(object):
 
