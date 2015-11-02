@@ -6,6 +6,12 @@ from collections import deque
 def maybe_space(s):
     return ' ' + s if s else ''
 
+def is_all_capital(s):
+    for c in s:
+        if not c.isupper() and not c.isdigit():
+            return False
+    return True
+
 class CType(object):
 
     def unwrap_to(self, visitor):
@@ -947,13 +953,12 @@ class MatcherStateAllCapital(object):
     def __init__(self, name):
         self.name = name
 
-    @property
-    def reduction(self):
-        return None
-    
+    def has_reduction(self):
+        return False
+        
     def translate(self, r):
         if isinstance(r, CPtr):
-            return MatcherStateAllCapitalPtr(name)
+            return MatcherStateAllCapitalPtr(self.name)
         else:
             return None
 
@@ -962,9 +967,12 @@ class MatcherStateAllCapitalPtr(object):
     def __init__(self, name):
         self.name = name
 
+    def has_reduction(self):
+        return True
+    
     @property
     def reduction(self):
-        return "P" + self.name
+        return CTypeRef("P" + self.name)
         
     def translate(self, r):
         return None
@@ -997,8 +1005,9 @@ class Matcher(object):
         
     def _get_start_state(self, core):
         if isinstance(core, CTypeRef):
-            if self._struct_exist(core.name):
-                return MatcherAllCapital(core.name)
+            name = core.name
+            if is_all_capital(name) and self._struct_exists(name):
+                return MatcherStateAllCapital(name)
             else:
                 return None
         else:
@@ -1060,8 +1069,6 @@ def try3():
 
 # try3()
 #====================================================================#
-# TODO: the outputer
-
 class Definer(object):
 
     def __init__(self, tab = '    '):
@@ -1076,19 +1083,84 @@ class Definer(object):
 
     def _reduct(self, type):
         return self.matcher.reduct(type)
+
+class BraceDefMaker(object):
+
+    END_DEF = ';\n'
     
-def try4():
+    @staticmethod
+    def make_typedef_args(type, name):
+        if isinstance(type, CEnum) or not is_all_capital(name):
+            return name;
+        else:
+            return name + ', *P' + name
+
+    @staticmethod
+    def make_inner_names(type, name):
+        inner_name = '_' + name
+        if isinstance(type, CEnum):
+            mixed_inner_name = ''
+        else:
+            mixed_inner_name = inner_name
+        return inner_name, mixed_inner_name
+        
+    def __init__(self, name, type, definer):
+        self._inner_name, self._mixed_inner_name = (
+            BraceDefMaker.make_inner_names(type, name))
+        self._typedef_args = (
+            BraceDefMaker.make_typedef_args(type, name))
+        self._type = type
+        self._definer = definer
+
+    def pure_def(self, indent = ''):
+        return (
+            indent + self._type.qualified_name(self._inner_name) + '\n' +
+            self._type.def_body(self._definer, indent) +
+            BraceDefMaker.END_DEF)
+
+    def _typedef(self, indent, inner_name, def_body):
+        return (
+            indent + "typedef " + self._type.qualified_name(inner_name) +
+            def_body + " " + self._typedef_args +
+            BraceDefMaker.END_DEF)
+    
+    def typedef(self, indent = ''):
+        return self._typedef(indent, self._inner_name, '')
+
+    def mixed_def(self, indent = ''):
+        return self._typedef(
+            indent,
+            self._mixed_inner_name,
+            '\n' + self._type.def_body(self._definer, indent))
+
+def try5():
     d = Definer()
     m = d.matcher
     f1 = CFunc(PrimTypes.INT)
     f1.add(CPtr(CPtr(PrimTypes.VOID)))
     m.add_rule(CPtr(PrimTypes.VOID), 'PVOID')
     m.add_rule(PrimTypes.INT, 'INT')
+    m.structs_list.append('MYSTRUC')
     # m.add_rule(CPtr(f1), 'MY_PROC')
-    print d.define(CPtr(f1), 'x')
-
-try4()
-
+    s1 = CStruct()
+    s1.add(PrimTypes.UINT, 'a')
+    u1 = CUnion()
+    u1.add(PrimTypes.CHAR, 'b1')
+    u1.add(CPtr(CTypeRef('MYSTRUC')), 'b2')
+    s1.add(u1, '')
+    s1.add(PrimTypes.INT, 'c')
+    # mk = BraceDefMaker('TEST_16', s1, d)
+    e1 = CEnum()
+    e1.add('RED', 10)
+    e1.add('GREEN', 20)
+    e1.add('BLUE', 30)
+    mk = BraceDefMaker('TEST16', e1, d)
+    print mk.typedef()
+    print mk.pure_def()
+    print mk.mixed_def()
+    
+try5()
+    
 #====================================================================#
 class Session(object):
 
