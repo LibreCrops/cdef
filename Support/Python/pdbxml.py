@@ -3,7 +3,7 @@
 import sys
 import xml.etree.ElementTree as et
 from collections import deque
-from operator import attrgetter
+
 #====================================================================#
 def maybe_space(s):
     return ' ' + s if s else ''
@@ -1176,7 +1176,7 @@ def try5():
 def setup_goo_matcher(m):
     for i in dir(PrimTypes):
         if i.isupper():
-            m.add_rule(attrgetter(i)(PrimTypes), i)
+            m.add_rule(getattr(PrimTypes, i), i)
 #====================================================================#
 class Session(object):
 
