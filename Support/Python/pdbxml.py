@@ -3,6 +3,7 @@
 import sys
 import xml.etree.ElementTree as et
 from collections import deque
+from functools import total_ordering
 
 #====================================================================#
 def maybe_space(s):
@@ -214,14 +215,18 @@ class CUnion(CTree):
     def keyword(self):
         return 'union'
 
-
+@total_ordering
 class TypeAttr(object):
+    __hash__ = object.__hash__
     def __init__(self, name, num):
         self.__name = name
         self.__num = num
 
-    def __cmp__(self, other):
-        return cmp(self.__num, other.__num)
+    def __eq__(self, other):
+        return self.__num == other.__num
+
+    def __lt__(self, other):
+        return self.__num < other.__num
 
     @property
     def name(self):
@@ -251,7 +256,7 @@ class CAttrTerm(CTerm):
 
     @property
     def attr_str(self):
-        return ' '.join(map(lambda attr: attr.name, sorted(self.__attrs)))
+        return ' '.join(attr.name for attr in sorted(self.__attrs))
 
     # (impl)
     def part_def(self, indent, tab):
