@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import sys
 import xml.etree.ElementTree as et
 from collections import deque
 #====================================================================#
@@ -806,6 +807,15 @@ class TreeSorter(object):
                 result.append(topo.sort())
         return result
 
+    def get_type(self, name):
+        return self._info[name].type
+
+    def is_type_recursive(self, name):
+        return self._info[name].self_ref
+
+    def name_list(self):
+        return self._info.keys()
+
 #====================================================================#
 def try_():
     global st
@@ -998,15 +1008,15 @@ class Matcher(object):
 
     def __init__(self):
         self._starts = {}
-        self.structs_list = []
+        self.tree_names_list = []
 
-    def _struct_exists(self, name):
-        return name in self.structs_list
+    def _tree_exists(self, name):
+        return name in self.tree_names_list
         
     def _get_start_state(self, core):
         if isinstance(core, CTypeRef):
             name = core.name
-            if is_all_capital(name) and self._struct_exists(name):
+            if is_all_capital(name) and self._tree_exists(name):
                 return MatcherStateAllCapital(name)
             else:
                 return None
@@ -1140,7 +1150,7 @@ def try5():
     f1.add(CPtr(CPtr(PrimTypes.VOID)))
     m.add_rule(CPtr(PrimTypes.VOID), 'PVOID')
     m.add_rule(PrimTypes.INT, 'INT')
-    m.structs_list.append('MYSTRUC')
+    m.tree_names_list.append('MYSTRUC')
     # m.add_rule(CPtr(f1), 'MY_PROC')
     s1 = CStruct()
     s1.add(PrimTypes.UINT, 'a')
@@ -1159,7 +1169,7 @@ def try5():
     print mk.pure_def()
     print mk.mixed_def()
     
-try5()
+# try5()
     
 #====================================================================#
 class Session(object):
@@ -1175,13 +1185,53 @@ class Session(object):
         self._storage.end_file()
         self._file_index += 1
 
-    def write_header(self, file_path):
+    def write_header(self, file_handle = sys.stdout):
         tree_sorter = TreeSorter()
         enum_list = []
         self._storage.choose_into(tree_sorter, enum_list)
         tree_sorter.pre_sort()
         groups = tree_sorter.sort()
-        return groups, enum_list
+        definer = Definer()
+        definer.matcher.tree_names_list= tree_sorter.name_list()
+
+        separator = ('/' * 79) + '\n'
+
+        file_handle.write(separator)
+        
+        for name, type in enum_list:
+            file_handle.write(BraceDefMaker(name, type, definer).mixed_def())
+            file_handle.write('\n')
+
+        file_handle.write(separator)
+            
+        for group in groups:
+            if (len(group) == 1 and
+                not tree_sorter.is_type_recursive(group[0])
+            ):
+                name = group[0]
+                type = tree_sorter.get_type(name)
+                file_handle.write(BraceDefMaker(name, type, definer).mixed_def())
+                file_handle.write('\n')
+
+            else:
+                makers = [BraceDefMaker(
+                    name, tree_sorter.get_type(name), definer)
+                    for name in group]
+
+                for maker in makers:
+                    file_handle.write(maker.typedef())
+                file_handle.write('\n')
+                
+                for maker in makers:
+                    file_handle.write(maker.pure_def())
+                file_handle.write('\n')
+                    
+    def write_header_to_file(self, file_path):
+        f = open(file_path, 'w')
+        self.write_header(f)
+        f.close()
     
 #====================================================================#
 s = Session()
+s.load('f:\\ntkrnlmp.xml')
+s.write_header()
