@@ -1,0 +1,26 @@
+def try_():
+    global st
+    s_vt = CStruct()
+    method1 = CFunc(PrimTypes.INT)
+    method1.add(CPtr(CTypeRef('ICrazy')))
+    s_vt.add(method1, 'DoIt')
+    s_iface = CStruct()
+    s_iface.add(CPtr(CTypeRef('ICrazyVTable')), 'vt')
+    s_iface.add(CPtr(CTypeRef('IUnknown')), 'unk')
+    s_iface.add(CTypeRef('ICrazyVTable'), 'test_use')
+    s_com = CStruct()
+    s_com.add(CPtr(CTypeRef('ICrazy')), 'crazier')
+    s_node = CStruct()
+    s_node.add(CPtr(CTypeRef('Node')), 'prev')
+    s_node.add(CPtr(CTypeRef('Node')), 'next')
+
+    storage = Storage()
+    storage.begin_file(0)
+    storage.add('Node', s_node)
+    storage.add('Component', s_com)
+    storage.add('ICrazyVTable', s_vt)
+    storage.add('ICrazy', s_iface)
+    storage.end_file()
+
+    st = TreeSorter()
+    storage.choose_into(st, [])

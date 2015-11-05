@@ -1,11 +1,8 @@
-#!/usr/bin/env python3
-
 import sys
 import xml.etree.ElementTree as et
 from collections import deque
 from functools import total_ordering
 
-#====================================================================#
 def maybe_space(s):
     return ' ' + s if s else ''
 
@@ -823,34 +820,6 @@ class TreeSorter(object):
         return self._info.keys()
 
 #====================================================================#
-def try_():
-    global st
-    s_vt = CStruct()
-    method1 = CFunc(PrimTypes.INT)
-    method1.add(CPtr(CTypeRef('ICrazy')))
-    s_vt.add(method1, 'DoIt')
-    s_iface = CStruct()
-    s_iface.add(CPtr(CTypeRef('ICrazyVTable')), 'vt')
-    s_iface.add(CPtr(CTypeRef('IUnknown')), 'unk')
-    s_iface.add(CTypeRef('ICrazyVTable'), 'test_use')
-    s_com = CStruct()
-    s_com.add(CPtr(CTypeRef('ICrazy')), 'crazier')
-    s_node = CStruct()
-    s_node.add(CPtr(CTypeRef('Node')), 'prev')
-    s_node.add(CPtr(CTypeRef('Node')), 'next')
-
-    storage = Storage()
-    storage.begin_file(0)
-    storage.add('Node', s_node)
-    storage.add('Component', s_com)
-    storage.add('ICrazyVTable', s_vt)
-    storage.add('ICrazy', s_iface)
-    storage.end_file()
-
-    st = TreeSorter()
-    storage.choose_into(st, [])
-
-#====================================================================#
 class SameWrapVisitor(WrapVisitor):
 
     def __init__(self):
@@ -904,12 +873,6 @@ class SameJudgerVisitor(WrapVisitor):
     def visit_bits(self, t):
         assert False, 'should not be here'
 
-def try2():
-    t1 = CFunc(PrimTypes.VOID)
-    t2 = CFunc(PrimTypes.VOID)
-    t1.add(PrimTypes.INT)
-    t2.add(PrimTypes.INT)
-    print(t1.same_as(t2))
 
 class NextStateSetVisitor(WrapVisitor):
 
@@ -1078,16 +1041,6 @@ class Matcher(object):
         else:
             return type
 
-def try3():
-    global m
-    m = Matcher()
-    m.add_rule(PrimTypes.INT, 'INT')
-    m.add_rule(CPtr(PrimTypes.INT), 'PINT')
-    m.add_rule(CPtr(CPtr(PrimTypes.VOID)), 'PPVOID')
-    t1 = PrimTypes.INT
-    print(m.reduct(t1).define('x', '....', '    '))
-
-# try3()
 #====================================================================#
 class Definer(object):
 
@@ -1153,33 +1106,6 @@ class BraceDefMaker(object):
             self._mixed_inner_name,
             '\n' + self._type.def_body(self._definer, indent))
 
-def try5():
-    d = Definer()
-    m = d.matcher
-    f1 = CFunc(PrimTypes.INT)
-    f1.add(CPtr(CPtr(PrimTypes.VOID)))
-    m.add_rule(CPtr(PrimTypes.VOID), 'PVOID')
-    m.add_rule(PrimTypes.INT, 'INT')
-    m.tree_names_list.append('MYSTRUC')
-    # m.add_rule(CPtr(f1), 'MY_PROC')
-    s1 = CStruct()
-    s1.add(PrimTypes.UINT, 'a')
-    u1 = CUnion()
-    u1.add(PrimTypes.CHAR, 'b1')
-    u1.add(CPtr(CTypeRef('MYSTRUC')), 'b2')
-    s1.add(u1, '')
-    s1.add(PrimTypes.INT, 'c')
-    # mk = BraceDefMaker('TEST_16', s1, d)
-    e1 = CEnum()
-    e1.add('RED', 10)
-    e1.add('GREEN', 20)
-    e1.add('BLUE', 30)
-    mk = BraceDefMaker('TEST16', e1, d)
-    print(mk.typedef())
-    print(mk.pure_def())
-    print(mk.mixed_def())
-
-# try5()
 
 #====================================================================#
 def setup_goo_matcher(m):
@@ -1248,7 +1174,3 @@ class Session(object):
         f.close()
 
 #====================================================================#
-s = Session()
-for i in sys.argv[1:]:
-    s.load(i)
-    s.write_header()
