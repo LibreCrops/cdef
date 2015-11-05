@@ -1,4 +1,4 @@
-from .callconvs import CallConvs
+from . import callconvs
 from .utils import maybe_space, is_all_capital
 
 
@@ -245,7 +245,7 @@ class CArr(CWrap):
         visitor.visit_arr(self)
 
 class CFunc(CWrap):
-    def __init__(self, ret_type, call_conv = CallConvs.default):
+    def __init__(self, ret_type, call_conv = callconvs.DEFAULT):
         self.next = ret_type
         self.args = []
         self.call_conv = call_conv
@@ -345,7 +345,7 @@ class Decorator(WrapVisitor):
 
     @staticmethod
     def _with_call_conv(s, conv):
-        if conv is CallConvs.default:
+        if conv is callconvs.DEFAULT:
             return s
         else:
             return conv.keyword + ' ' + s

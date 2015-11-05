@@ -4,9 +4,9 @@ from .ctype import (
     CStruct, CUnion, CEnum, CBits,
     CAttrTerm, CTypeRef, CArr, CPtr, CFunc
 )
-from .primtypes import PrimTypes
+from . import primtypes
+from . import callconvs
 from .typeattrs import TypeAttrs
-from .callconvs import CallConvs
 
 
 class XmlParser(object):
@@ -84,23 +84,23 @@ class XmlParser(object):
 
     # TODO define this as a class var
     __primTypes = {
-        'VOID':         PrimTypes.VOID,
-        'WCHAR':        PrimTypes.WCHAR,
+        'VOID':         primtypes.VOID,
+        'WCHAR':        primtypes.WCHAR,
 
-        'CHAR':         PrimTypes.CHAR,
-        'UCHAR':        PrimTypes.UCHAR,
-        'SHORT':        PrimTypes.SHORT,
-        'USHORT':       PrimTypes.USHORT,
-        'INT':          PrimTypes.INT,
-        'UINT':         PrimTypes.UINT,
-        'LONG':         PrimTypes.LONG,
-        'ULONG':        PrimTypes.ULONG,
+        'CHAR':         primtypes.CHAR,
+        'UCHAR':        primtypes.UCHAR,
+        'SHORT':        primtypes.SHORT,
+        'USHORT':       primtypes.USHORT,
+        'INT':          primtypes.INT,
+        'UINT':         primtypes.UINT,
+        'LONG':         primtypes.LONG,
+        'ULONG':        primtypes.ULONG,
 
-        'LONGLONG':     PrimTypes.LONGLONG,
-        'ULONGLONG':    PrimTypes.ULONGLONG,
+        'LONGLONG':     primtypes.LONGLONG,
+        'ULONGLONG':    primtypes.ULONGLONG,
 
-        'FLOAT':        PrimTypes.FLOAT,
-        'DOUBLE':       PrimTypes.DOUBLE,
+        'FLOAT':        primtypes.FLOAT,
+        'DOUBLE':       primtypes.DOUBLE,
     }
 
     def _read_prim(self, name):
@@ -121,7 +121,8 @@ class XmlParser(object):
                 t = CPtr(t)
                 i += 1
             else:
-                conv = CallConvs.stdcall if c == 'F' else CallConvs.default
+                conv = callconvs.STDCALL if c == 'F' \
+                       else callconvs.DEFAULT
                 t = self._read_func(int(arr[i + 1]), t, conv)
                 i += 2
         return t
