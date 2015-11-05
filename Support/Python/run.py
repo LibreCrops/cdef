@@ -3,7 +3,7 @@
 
 import sys
 
-from pdbxml.pdbxml import Session
+from pdbxml.session import Session
 
 
 s = Session()
