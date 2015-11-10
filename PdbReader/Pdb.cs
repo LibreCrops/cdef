@@ -128,13 +128,18 @@ namespace PdbReader
             _symbols.Add(name, new PdbSymbol(symbol, name, type));
         }
 
+        private bool IsUdtEmpty(IDiaSymbol udt)
+        {
+            return udt.length == 0;
+        }
+
         private void LoadUdts(IDiaSymbol global)
         {
             IDiaEnumSymbols symbols;
             global.findChildren(SymTagEnum.SymTagUDT, null, 0, out symbols);
             foreach (IDiaSymbol symbol in symbols)
             {
-                if (!PdbSymbol.IsUnnamed(symbol))
+                if (!PdbSymbol.IsUnnamed(symbol) && !IsUdtEmpty(symbol))
                 {
                     switch ((UdtKindEnum)symbol.udtKind)
                     {
