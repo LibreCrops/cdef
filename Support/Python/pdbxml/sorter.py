@@ -1,49 +1,7 @@
+from __future__ import print_function
+import sys
 from collections import deque
-
-
-class TopoSorter(object):
-    def __init__(self):
-        self.back_deps = {}
-        self.num_deps = {}
-        self.starters = []
-
-    def add(self, key, deps):
-        num_deps = 0
-        for dep in deps:
-            if dep == key:
-                continue
-            num_deps += 1
-            back_dep_arr = self.back_deps.get(dep)
-            if not back_dep_arr:
-                back_dep_arr = []
-                self.back_deps[dep] = back_dep_arr
-            back_dep_arr.append(key)
-        self.num_deps[key] = num_deps
-        if num_deps == 0:
-            self.starters.append(key)
-
-    def read_graph(self, graph):
-        for vertex in graph.vertices():
-            self.add(vertex, graph.get_deps(vertex))
-
-    def sort(self):
-        order = []
-        back_deps = self.back_deps
-        num_deps = self.num_deps
-        num_processed = 0
-        num_vertices = len(num_deps)
-        queue = deque(self.starters)
-        while queue:
-            vertex = queue.popleft()
-            num_processed += 1
-            order.append(vertex)
-            for next_vertex in (back_deps.get(vertex) or []):
-                num_deps[next_vertex] -= 1
-                if num_deps[next_vertex] == 0:
-                    queue.append(next_vertex)
-        assert num_processed == num_vertices, 'not DAG'
-        return order
-
+from toposort import toposort_flatten as topo_sort
 
 # ref: https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
 class TarjanAlgo(object):
@@ -104,7 +62,7 @@ class TarjanAlgo(object):
                 for next_vertex in self.graph.get_deps(vertex):
                     next_group_index = self.indices[next_vertex]
                     dep_indices.add(next_group_index)
-            graph.add(group_index, list(dep_indices))
+            graph.add(group_index, dep_indices)
             group_index += 1
         return graph
 
@@ -160,9 +118,7 @@ class TreeSorter(object):
 
     def _sort_scc(self, graph):
         # NOTE: is this step necessary?
-        topo = TopoSorter()
-        topo.read_graph(graph)
-        return topo.sort()
+        return topo_sort(graph.deps)
 
     def sort(self):
         result = []
@@ -176,12 +132,12 @@ class TreeSorter(object):
                     self._info[names[0]].self_ref = True
                 result.append(names)
             else:
-                topo = TopoSorter()
+                graph = Graph()
                 for name in names:
-                    topo.add(name,
-                             filter(lambda u: scc.indices[u] == scc_index,
-                                    self._info[name].use))
-                result.append(topo.sort())
+                    graph.add(name,
+                              set(filter(lambda u: scc.indices[u] == scc_index,
+                                         self._info[name].use)))
+                result.append(topo_sort(graph.deps))
         return result
 
     def get_type(self, name):

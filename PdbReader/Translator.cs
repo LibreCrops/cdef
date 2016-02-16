@@ -210,20 +210,9 @@ namespace PdbReader
         {
             return new Collector(this).CollectUnion(symbols);
         }
-        private string InternName(string name)
-        {
-            if (name.StartsWith("_"))
-            {
-                return name.Substring(1);
-            }
-            else
-            {
-                return name;
-            }
-        }
         public CType TranslateTypeRef(IDiaSymbol sym)
         {
-            return new CTypeRef(InternName(sym.name));
+            return new CTypeRef(PdbSymbol.InternName(sym.name));
         }
         public CType TranslateUnnamedUdt(IDiaSymbol sym)
         {

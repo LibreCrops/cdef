@@ -26,7 +26,15 @@ namespace PdbReader
         }
         public static string InternName(string name)
         {
-            return name.StartsWith("_") ? name.Substring(1) : name;
+            if (name.StartsWith("_"))
+            {
+                name = name.Substring(1);
+            }
+            if (name.StartsWith("tag"))
+            {
+                name = name.Substring(3);
+            }
+            return name;
         }
         public static string GetInternName(IDiaSymbol symbol)
         {
