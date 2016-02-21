@@ -8,7 +8,6 @@ from tarjan import find_sccs
 
 class TreeSorter(object):
     def __init__(self):
-        self._self_refs = None
         self._types = dict()
         self._deps = dict()
         self._uses = dict()
@@ -45,7 +44,7 @@ class TreeSorter(object):
             for index, scc in enumerate(sccs)
         }
 
-        self._self_refs = {
+        self_refs = {
             scc[0]
             for index, scc in enumerate(sccs)
             if len(scc) == 1 and (index in scc_graph[index])
@@ -63,13 +62,15 @@ class TreeSorter(object):
             # NOTE: is topo_sort here necessary?
             for index in topo_sort(scc_graph)
         ]
-        return result
+        return result, self_refs
 
     def get_type(self, name):
         return self._types[name]
 
-    def is_type_recursive(self, name):
-        return name in self._self_refs
+def sort_structs(structs):
+    sorter = TreeSorter()
+    for pair in structs:
+        sorter.add(*pair)
+    sorter.pre_sort()
+    return sorter.sort()
 
-    def name_list(self):
-        return self._types.keys()

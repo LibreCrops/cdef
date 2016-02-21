@@ -2,10 +2,9 @@ import sys
 
 from .ctype import CTree
 from .xmlparser import XmlParser
-from .sorter import TreeSorter
+from .sorter import sort_structs
 from .definer import Definer, BraceDefMaker
 from .primtypes import setup_goo_matcher
-
 
 class Session(object):
     def __init__(self):
@@ -20,35 +19,30 @@ class Session(object):
         self._file_index += 1
 
     def write_header(self, file_handle = sys.stdout):
-        tree_sorter = TreeSorter()
-        enum_list = []
-        self._storage.choose_into(tree_sorter, enum_list)
-        tree_sorter.pre_sort()
-        groups = tree_sorter.sort()
+        structs_list, enum_list = self._storage.split()
+        structs_dict = dict(structs_list)
+        struct_groups, recursive_types = sort_structs(structs_list)
+        
         definer = Definer()
         setup_goo_matcher(definer.matcher)
-        definer.matcher.tree_names_list= tree_sorter.name_list()
+        definer.matcher.tree_names_list = structs_dict.keys()
         separator = ('/' * 79) + '\n'
         file_handle.write(separator)
+        
         for name, type in enum_list:
-            file_handle.write(
-                BraceDefMaker(name, type, definer).mixed_def()
-            )
+            file_handle.write(BraceDefMaker(name, type, definer).mixed_def())
             file_handle.write('\n')
         file_handle.write(separator)
-        for group in groups:
-            if (len(group) == 1 and
-                not tree_sorter.is_type_recursive(group[0])
-            ):
+        
+        for group in struct_groups:
+            if len(group) == 1 and group[0] not in recursive_types:
                 name = group[0]
-                type = tree_sorter.get_type(name)
-                file_handle.write(
-                    BraceDefMaker(name, type, definer).mixed_def()
-                )
+                type = structs_dict[name]
+                file_handle.write(BraceDefMaker(name, type, definer).mixed_def())
                 file_handle.write('\n')
             else:
-                makers = [BraceDefMaker(
-                    name, tree_sorter.get_type(name), definer)
+                makers = [
+                    BraceDefMaker(name, structs_dict[name], definer)
                     for name in group]
                 for maker in makers:
                     file_handle.write(maker.typedef())
@@ -94,14 +88,16 @@ class Storage(object):
     def impls(self):
         return self._data
 
-    def choose_into(self, tree_sorter, enum_list):
+    def split(self):
+        structs = []
+        enums = []
         for name, impls in self._data.items():
             brace = impls[0].type
             if isinstance(brace, CTree):
-                tree_sorter.add(name, brace)
+                structs.append((name, brace))
             else:
-                enum_list.append((name, brace))
-
+                enums.append((name,brace))
+        return structs, enums
 
 class ImplItem(object):
     def __init__(self, type, file, index):
