@@ -64,9 +64,6 @@ class TreeSorter(object):
         ]
         return result, self_refs
 
-    def get_type(self, name):
-        return self._types[name]
-
 def sort_structs(structs):
     sorter = TreeSorter()
     for pair in structs:

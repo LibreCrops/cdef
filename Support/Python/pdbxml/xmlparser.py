@@ -14,15 +14,18 @@ class XmlParser(object):
         tree = et.parse(path)
         root = tree.getroot()
         self.root = root
-        self._loc_func = Locator(root[0])
-        self._loc_unnamed = Locator(root[1])
+        self._e_funcs = root[0]
+        self._e_unnameds = root[1]
         self._named = root[2]
+
+    def _locate_child(self, e_parent, id):
+        return e_parent.findall(".//*[@id='%s']" % id)[0]
 
     def _read_named(self, e_type):
         return self._read_group(e_type)
 
     def _read_unnamed(self, id):
-        e_unnamed = self._loc_unnamed.find(id)
+        e_unnamed = self._locate_child(self._e_unnameds, id)
         return self._read_group(e_unnamed)
 
     def _read_group(self, e_type):
@@ -128,7 +131,7 @@ class XmlParser(object):
         return t
 
     def _read_func(self, id, t, conv):
-        e_func = self._loc_func.find(id)
+        e_func = self._locate_child(self._e_funcs, id)
         t = CFunc(t, conv)
         for e_arg in e_func:
             t.add(self._read_type(e_arg, True))
@@ -139,19 +142,3 @@ class XmlParser(object):
             name = e_type.attrib['name']
             type = self._read_named(e_type)
             storage.add(name, type)
-
-
-class Locator(object):
-    def __init__(self, elem):
-        self._elem = elem
-        self._index = -1
-
-    def find(self, id):
-        self._index += 1
-        child = self._elem[self._index]
-        # assert int(child.attrib['id']) == id
-        # BELOW: for TEST purposes
-        if int(child.attrib['id']) != id:
-            print("warn: need id %d but current id is %s" % (id, child.attrib['id']))
-            return self._elem.findall(".//*[@id='%s']" % id)[0]
-        return child
