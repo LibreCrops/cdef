@@ -8,19 +8,29 @@ from .primtypes import setup_goo_matcher
 
 class Session(object):
     def __init__(self):
-        self._storage = Storage()
-        self._file_index = 0
+        self._data = {}
+
+    def _add_data(self, file_path, name, type):
+        self._data[name] = type
+
+    def _split_data(self):
+        structs = []
+        enums = []
+        for name, impl in self._data.iteritems():
+            brace = impl
+            if isinstance(brace, CTree):
+                structs.append((name, brace))
+            else:
+                enums.append((name,brace))
+        return structs, enums
 
     def load(self, file_path):
-        self._storage.begin_file(self._file_index)
         name_type_pairs = parse_xml(file_path)
         for name, type in name_type_pairs:
-            self._storage.add(name, type)
-        self._storage.end_file()
-        self._file_index += 1
+            self._add_data(file_path, name, type)
 
     def write_header(self, file_handle = sys.stdout):
-        structs_list, enum_list = self._storage.split()
+        structs_list, enum_list = self._split_data()
         structs_dict = dict(structs_list)
         struct_groups, recursive_types = sort_structs(structs_list)
         
@@ -56,52 +66,3 @@ class Session(object):
         f = open(file_path, 'w')
         self.write_header(f)
         f.close()
-
-
-class Storage(object):
-    def __init__(self):
-        self._data = {}
-
-    def begin_file(self, file):
-        self._file = file
-        self._indices = {}
-
-    def end_file(self):
-        self._file = None
-        self._indices = None
-
-    def _fetch_index(self, name):
-        index = self._indices.get(name)
-        index = index + 1 if (index is not None) else 0
-        self._indices[name] = index
-        return index
-
-    def add(self, name, type):
-        file = self._file
-        index = self._fetch_index(name)
-        items = self._data.get(name)
-        if not items:
-            items = []
-            self._data[name] = items
-        items.append(ImplItem(type, file, index))
-
-    @property
-    def impls(self):
-        return self._data
-
-    def split(self):
-        structs = []
-        enums = []
-        for name, impls in self._data.items():
-            brace = impls[0].type
-            if isinstance(brace, CTree):
-                structs.append((name, brace))
-            else:
-                enums.append((name,brace))
-        return structs, enums
-
-class ImplItem(object):
-    def __init__(self, type, file, index):
-        self.type = type
-        self.file = file
-        self.index = index
