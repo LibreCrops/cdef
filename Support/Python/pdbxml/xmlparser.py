@@ -137,8 +137,12 @@ class XmlParser(object):
             t.add(self._read_type(e_arg, True))
         return t
 
-    def read_to_storage(self, storage):
-        for e_type in self._named:
-            name = e_type.attrib['name']
-            type = self._read_named(e_type)
-            storage.add(name, type)
+    def read_all(self):
+        return [
+            (e_type.attrib['name'], self._read_named(e_type))
+            for e_type in self._named
+        ]
+
+def parse_xml(file_path):
+    parser = XmlParser(file_path)
+    return parser.read_all()

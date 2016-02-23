@@ -1,7 +1,7 @@
 import sys
 
 from .ctype import CTree
-from .xmlparser import XmlParser
+from .xmlparser import parse_xml
 from .sorter import sort_structs
 from .definer import Definer, BraceDefMaker
 from .primtypes import setup_goo_matcher
@@ -12,9 +12,10 @@ class Session(object):
         self._file_index = 0
 
     def load(self, file_path):
-        parser = XmlParser(file_path)
         self._storage.begin_file(self._file_index)
-        parser.read_to_storage(self._storage)
+        name_type_pairs = parse_xml(file_path)
+        for name, type in name_type_pairs:
+            self._storage.add(name, type)
         self._storage.end_file()
         self._file_index += 1
 
