@@ -36,9 +36,18 @@ you'd better use [PdbReader] directly.
 
 #### EXCEPTION\_REGISTRATION\_RECORD
 
+The first structure of [NT_TIB](https://en.wikipedia.org/wiki/Win32_Thread_Information_Block).
+
+[From NirSoft](http://www.nirsoft.net/kernel_struct/vista/EXCEPTION_REGISTRATION_RECORD.html).
 
 ![](Images/nirsoft-1.png)
+
+[From MoonSols](http://msdn.moonsols.com/win7rtm_x86/EXCEPTION_REGISTRATION_RECORD.html).
+
 ![](Images/moonsols-1.png)
+
+[From PdbReader](http://hoocs.github.io/lost-sdk/).
+
 ![](Images/pdbreader-1.png)
 
 
