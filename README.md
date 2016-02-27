@@ -1,28 +1,46 @@
 # PdbReader
 
-Designed For Automation And Further Development
 
-Get struct definitions from PDB files.
+Recover C language structures from [Microsoft PDB] files.
+
+Designed for automation and further development,
+see the dedicated section below on producers and consumers.
 
 Help us test this app!
 
-## Libraries For Developers
 
-To be added shortly.
+## For Users
 
-But now feel free to look at the source code in C#
-as well as the [demo implementation](./CollectAlgorithm/demo.scm)
-in the [Scheme] programming language.
 
-The consumer library in Python is currently under construction.
+Here is the [release x86 build](./PdbReader.exe),
+which probably isn't up to date.
 
-## Programs For Users
+It won't function without [DIA].
+But if you have [Visual Studio] development environment installed,
+it is most likely that you also have [DIA] installed.
 
-Here is the [release x86 build](./PdbReader.exe).
 
-It will not function without DIA.
-But if you have Visual Studio development environment installed,
-it is most likely that you also have DIA installed.
+### Demonstration
+
+See http://hoocs.github.io/lost-sdk/.
+
+But that's merely a demonstration of [PdbReader].
+
+For further development upon structures
+or any other customized requirements,
+you'd better use [PdbReader] directly.
+
+
+### Some Comparison
+
+
+#### EXCEPTION\_REGISTRATION\_RECORD
+
+
+![](Images/nirsoft-1.png)
+![](Images/moonsols-1.png)
+![](Images/pdbreader-1.png)
+
 
 ### PdbReader.exe Usage
 
@@ -35,10 +53,39 @@ xml     output xml data
 def     output type definitions
 ```
 
-### PdbReader.exe Usage Samples
+Explore and discover it yourself for the time being.
 
-To be added.
 
-But you are free to play with it now.
+## For Developers
 
+
+### Implementation Details
+
+To be added later.
+
+But now feel free to look at the source code in C#
+as well as the [demo implementation](./CollectAlgorithm/demo.scm)
+in the [Scheme] programming language.
+
+
+### Producers & Consumers
+
+PdbReader understands that [DIA] can't be made
+cross-platform with ease, and therefore it will produce
+an intermediate representation of structures using [XML].
+
+That representation can be consumed in any programming languages
+, as long as someone implements a consumer.
+
+Our consumer in Python is currently under construction,
+but it is of help when you want to write your own consumer.
+
+Detailed specification of the representation may be added later.
+
+
+[PdbReader]: https://github.com/kbridge/PdbReader
 [Scheme]: https://en.wikipedia.org/wiki/Scheme_(programming_language)
+[Microsoft PDB]: https://github.com/Microsoft/microsoft-pdb
+[DIA]: https://msdn.microsoft.com/en-us/library/x93ctkx8.aspx
+[Visual Studio]: https://www.visualstudio.com/
+[XML]: https://www.w3.org/XML/
