@@ -11,7 +11,7 @@ STFI
 
 Google will tell you.
 
-.. image: Images/void.png
+.. image:: Images/void.png
 
 
 Recommended Links
@@ -46,6 +46,6 @@ References
 - `Is there a difference between foo(void) and foo() in C++ or C`_
 
 
-c++ - What is the difference between function() and function(void)?: http://programmers.stackexchange.com/questions/286490/what-is-the-difference-between-function-and-functionvoid
-Understanding the difference between f() and f(void) in C and C++ once and for all: http://stackoverflow.com/questions/13319492/understanding-the-difference-between-f-and-fvoid-in-c-and-c-once-and-for-a
-Is there a difference between foo(void) and foo() in C++ or C: http://stackoverflow.com/questions/51032/is-there-a-difference-between-foovoid-and-foo-in-c-or-c
+.. _c++ - What is the difference between function() and function(void)?: http://programmers.stackexchange.com/questions/286490/what-is-the-difference-between-function-and-functionvoid
+.. _Understanding the difference between f() and f(void) in C and C++ once and for all: http://stackoverflow.com/questions/13319492/understanding-the-difference-between-f-and-fvoid-in-c-and-c-once-and-for-a
+.. _Is there a difference between foo(void) and foo() in C++ or C: http://stackoverflow.com/questions/51032/is-there-a-difference-between-foovoid-and-foo-in-c-or-c
