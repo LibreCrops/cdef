@@ -38,8 +38,8 @@ there still exist some circumstances where the difference has to be
 taken into consideration carefully and seriously.
 
 
-Win32 API: CallWindowProc_
-++++++++++++++++++++++++++
+Case 1. Win32 API: CallWindowProc_
+++++++++++++++++++++++++++++++++++
 
 You know as usual, RTFM, CallWindowProc_.
 
@@ -48,8 +48,8 @@ Especially the section ``Remarks``, around the sentence
 deserves a serious reading.
 
 
-PdbReader_: Recovery of btVoid_ and btNoType_ in BasicType_ of DIA_
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Case 2. PdbReader_: Recovery of btVoid_ and btNoType_ in BasicType_ of DIA_
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 In the very beginning
 when encoutered with ``btVoid`` and ``btNoType``,
@@ -85,6 +85,9 @@ and don't use ``()`` in ``C``, unless you are 100% confident
 that you want the arguments unspecified,
 which might be useful in some cases.
 
+As a matter of fact, it very likely that there are still many more
+situations where the difference can causing problems.
+
 
 References
 ----------
@@ -98,6 +101,8 @@ References
 - CallWindowProc_
 
 - BasicType_
+
+- `Issue #1`_
 
 
 .. _c++ - What is the difference between function() and function(void)?: http://programmers.stackexchange.com/questions/286490/what-is-the-difference-between-function-and-functionvoid

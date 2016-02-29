@@ -107,3 +107,8 @@ Detailed specification of the representation may be added later.
 [DIA]: https://msdn.microsoft.com/en-us/library/x93ctkx8.aspx
 [Visual Studio]: https://www.visualstudio.com/
 [XML]: https://www.w3.org/XML/
+
+
+## Documentation
+
+- [What the difference is between `()` and `(void)` and when it does matter](Documentation/()-vs-(void).rst)
