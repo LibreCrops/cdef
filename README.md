@@ -3,10 +3,19 @@
 
 Recover C language structures from [Microsoft PDB] files.
 
-Designed for automation and further development,
-see the dedicated section below on producers and consumers.
-
 Help us test this app!
+
+
+## What it is
+
+[PdbReader] is a software / software library
+that recovers structure definitions,
+which are of help in some low-level programming,
+from [Microsoft PDB] files with resort to [DIA].
+
+It's designed to be friendly to automation and further development,
+see the dedicated section below on producers and consumers
+for more information.
 
 
 ## For Users
@@ -46,7 +55,7 @@ The first structure of [NT_TIB](https://en.wikipedia.org/wiki/Win32_Thread_Infor
 
 ![](Images/moonsols-1.png)
 
-[From PdbReader](http://hoocs.github.io/lost-sdk/).
+[From PdbReader](http://hoocs.github.io/lost-sdk/files/EXCEPTION_REGISTRATION_RECORD.h.html).
 
 ![](Images/pdbreader-1.png)
 
