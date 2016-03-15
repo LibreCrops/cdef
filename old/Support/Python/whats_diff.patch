@@ -1,0 +1,2606 @@
+--- win32k.h	2016-02-19 22:57:43.886814700 +0800
++++ win32k_2.h	2016-02-19 22:38:54.029967900 +0800
+@@ -1249,12 +1249,47 @@
+ } DEVICE_TEXT_TYPE;
+ 
+ ///////////////////////////////////////////////////////////////////////////////
+-typedef struct _TXN_PARAMETER_BLOCK
++typedef struct _IMAGE_DOS_HEADER
+ {
+-    USHORT Length;
+-    USHORT TxFsContext;
+-    VOID *TransactionObject;
+-} TXN_PARAMETER_BLOCK;
++    USHORT e_magic;
++    USHORT e_cblp;
++    USHORT e_cp;
++    USHORT e_crlc;
++    USHORT e_cparhdr;
++    USHORT e_minalloc;
++    USHORT e_maxalloc;
++    USHORT e_ss;
++    USHORT e_sp;
++    USHORT e_csum;
++    USHORT e_ip;
++    USHORT e_cs;
++    USHORT e_lfarlc;
++    USHORT e_ovno;
++    USHORT e_res[4];
++    USHORT e_oemid;
++    USHORT e_oeminfo;
++    USHORT e_res2[10];
++    LONG e_lfanew;
++} IMAGE_DOS_HEADER;
++
++typedef struct _LUID
++{
++    ULONG LowPart;
++    LONG HighPart;
++} LUID, *PLUID;
++
++typedef struct _KDESCRIPTOR
++{
++    USHORT Pad[3];
++    USHORT Limit;
++    VOID *Base;
++} KDESCRIPTOR, *PKDESCRIPTOR;
++
++typedef struct _M128A
++{
++    ULONGLONG Low;
++    LONGLONG High;
++} M128A, *PM128A;
+ 
+ typedef union _WHEA_PERSISTENCE_INFO
+ {
+@@ -1270,12 +1305,6 @@
+     ULONGLONG AsULONGLONG;
+ } WHEA_PERSISTENCE_INFO;
+ 
+-typedef struct _LUID
+-{
+-    ULONG LowPart;
+-    LONG HighPart;
+-} LUID, *PLUID;
+-
+ typedef union _WHEA_ERROR_RECORD_SECTION_DESCRIPTOR_VALIDBITS
+ {
+     struct
+@@ -1668,15 +1697,6 @@
+     ULONGLONG *Lock;
+ };
+ 
+-typedef struct _RTL_ACTIVATION_CONTEXT_STACK_FRAME RTL_ACTIVATION_CONTEXT_STACK_FRAME;
+-
+-struct _RTL_ACTIVATION_CONTEXT_STACK_FRAME
+-{
+-    RTL_ACTIVATION_CONTEXT_STACK_FRAME *Previous;
+-    ACTIVATION_CONTEXT *ActivationContext;
+-    ULONG Flags;
+-};
+-
+ typedef union _WHEA_ERROR_PACKET_FLAGS
+ {
+     struct
+@@ -1712,19 +1732,6 @@
+     USHORT IoMapBase;
+ } KTSS64, *PKTSS64;
+ 
+-typedef struct _KDESCRIPTOR
+-{
+-    USHORT Pad[3];
+-    USHORT Limit;
+-    VOID *Base;
+-} KDESCRIPTOR, *PKDESCRIPTOR;
+-
+-typedef struct _M128A
+-{
+-    ULONGLONG Low;
+-    LONGLONG High;
+-} M128A, *PM128A;
+-
+ typedef union _KGDTENTRY64
+ {
+     struct
+@@ -1937,13 +1944,12 @@
+     DEVICE_POWER_STATE DeviceState;
+ } POWER_STATE;
+ 
+-typedef struct _D3DKMDT_VIDPN_PRESENT_PATH_COPYPROTECTION_SUPPORT
++typedef struct _D3DDDI_DXGI_RGB
+ {
+-    UINT NoProtection : 1;
+-    UINT MacroVisionApsTrigger : 1;
+-    UINT MacroVisionFull : 1;
+-    UINT Reserved : 29;
+-} D3DKMDT_VIDPN_PRESENT_PATH_COPYPROTECTION_SUPPORT;
++    FLOAT Red;
++    FLOAT Green;
++    FLOAT Blue;
++} D3DDDI_DXGI_RGB;
+ 
+ typedef struct _D3DDDI_GAMMA_RAMP_RGB256x3x16
+ {
+@@ -1952,10 +1958,23 @@
+     USHORT Blue[256];
+ } D3DDDI_GAMMA_RAMP_RGB256x3x16;
+ 
+-typedef struct _CONTEXT32_UPDATE
++typedef struct _STRING
+ {
+-    ULONG NumberEntries;
+-} CONTEXT32_UPDATE;
++    USHORT Length;
++    USHORT MaximumLength;
++    CHAR *Buffer;
++} STRING, *PSTRING;
++
++typedef struct _IMAGE_FILE_HEADER
++{
++    USHORT Machine;
++    USHORT NumberOfSections;
++    ULONG TimeDateStamp;
++    ULONG PointerToSymbolTable;
++    ULONG NumberOfSymbols;
++    USHORT SizeOfOptionalHeader;
++    USHORT Characteristics;
++} IMAGE_FILE_HEADER;
+ 
+ typedef struct _D3DDDI_RATIONAL
+ {
+@@ -2007,23 +2026,6 @@
+     LONG High2Time;
+ } KSYSTEM_TIME;
+ 
+-typedef struct _WNDMSG
+-{
+-    UINT maxMsgs;
+-    UCHAR *abMsgs;
+-} WNDMSG, *PWNDMSG;
+-
+-typedef struct _IMAGE_FILE_HEADER
+-{
+-    USHORT Machine;
+-    USHORT NumberOfSections;
+-    ULONG TimeDateStamp;
+-    ULONG PointerToSymbolTable;
+-    ULONG NumberOfSymbols;
+-    USHORT SizeOfOptionalHeader;
+-    USHORT Characteristics;
+-} IMAGE_FILE_HEADER;
+-
+ typedef struct _IMAGE_DATA_DIRECTORY
+ {
+     ULONG VirtualAddress;
+@@ -2045,49 +2047,6 @@
+     UINT FourthChannel;
+ } D3DKMDT_COLOR_COEFF_DYNAMIC_RANGES;
+ 
+-typedef union _SLIST_HEADER
+-{
+-    struct
+-    {
+-        ULONGLONG Alignment;
+-        ULONGLONG Region;
+-    };
+-    struct
+-    {
+-        ULONGLONG Depth : 16;
+-        ULONGLONG Sequence : 9;
+-        ULONGLONG NextEntry : 39;
+-        ULONGLONG HeaderType : 1;
+-        ULONGLONG Init : 1;
+-        ULONGLONG Reserved : 59;
+-        ULONGLONG Region : 3;
+-    } Header8;
+-    struct
+-    {
+-        ULONGLONG Depth : 16;
+-        ULONGLONG Sequence : 48;
+-        ULONGLONG HeaderType : 1;
+-        ULONGLONG Init : 1;
+-        ULONGLONG Reserved : 2;
+-        ULONGLONG NextEntry : 60;
+-    } Header16;
+-    struct
+-    {
+-        ULONGLONG Depth : 16;
+-        ULONGLONG Sequence : 48;
+-        ULONGLONG HeaderType : 1;
+-        ULONGLONG Reserved : 3;
+-        ULONGLONG NextEntry : 60;
+-    } HeaderX64;
+-} SLIST_HEADER;
+-
+-typedef struct _SINGLE_LIST_ENTRY SINGLE_LIST_ENTRY;
+-
+-struct _SINGLE_LIST_ENTRY
+-{
+-    SINGLE_LIST_ENTRY *Next;
+-};
+-
+ typedef struct _Win32PoolHead Win32PoolHead;
+ 
+ struct _Win32PoolHead
+@@ -2142,37 +2101,76 @@
+     LONGLONG (*pfnMDIActivateDlgProc)(void);
+ } PFNCLIENT, *PPFNCLIENT;
+ 
+-typedef struct _DMM_MONITORDESCRIPTOR_SERIALIZATION
++typedef struct _RTL_DYNAMIC_HASH_TABLE
+ {
+-    UINT Id;
+-    D3DKMDT_MONITOR_DESCRIPTOR_TYPE Type;
+-    D3DKMDT_MONITOR_CAPABILITIES_ORIGIN Origin;
+-    UCHAR Data[128];
+-} DMM_MONITORDESCRIPTOR_SERIALIZATION;
++    ULONG Flags;
++    ULONG Shift;
++    ULONG TableSize;
++    ULONG Pivot;
++    ULONG DivisorMask;
++    ULONG NumEntries;
++    ULONG NonEmptyBuckets;
++    ULONG NumEnumerators;
++    VOID *Directory;
++} RTL_DYNAMIC_HASH_TABLE;
+ 
+-typedef struct _D3DKMDT_VIDPN_PRESENT_PATH_ROTATION_SUPPORT
++typedef union _SLIST_HEADER
+ {
+-    UINT Identity : 1;
+-    UINT Rotate90 : 1;
+-    UINT Rotate180 : 1;
+-    UINT Rotate270 : 1;
+-} D3DKMDT_VIDPN_PRESENT_PATH_ROTATION_SUPPORT;
++    struct
++    {
++        ULONGLONG Alignment;
++        ULONGLONG Region;
++    };
++    struct
++    {
++        ULONGLONG Depth : 16;
++        ULONGLONG Sequence : 9;
++        ULONGLONG NextEntry : 39;
++        ULONGLONG HeaderType : 1;
++        ULONGLONG Init : 1;
++        ULONGLONG Reserved : 59;
++        ULONGLONG Region : 3;
++    } Header8;
++    struct
++    {
++        ULONGLONG Depth : 16;
++        ULONGLONG Sequence : 48;
++        ULONGLONG HeaderType : 1;
++        ULONGLONG Init : 1;
++        ULONGLONG Reserved : 2;
++        ULONGLONG NextEntry : 60;
++    } Header16;
++    struct
++    {
++        ULONGLONG Depth : 16;
++        ULONGLONG Sequence : 48;
++        ULONGLONG HeaderType : 1;
++        ULONGLONG Reserved : 3;
++        ULONGLONG NextEntry : 60;
++    } HeaderX64;
++} SLIST_HEADER;
+ 
+-typedef struct _D3DKMDT_VIDPN_PRESENT_PATH_SCALING_SUPPORT
++typedef struct _SINGLE_LIST_ENTRY SINGLE_LIST_ENTRY;
++
++struct _SINGLE_LIST_ENTRY
+ {
+-    UINT Identity : 1;
+-    UINT Centered : 1;
+-    UINT Stretched : 1;
+-    UINT AspectRatioCenteredMax : 1;
+-    UINT Custom : 1;
+-} D3DKMDT_VIDPN_PRESENT_PATH_SCALING_SUPPORT;
++    SINGLE_LIST_ENTRY *Next;
++};
+ 
+-typedef struct _D3DDDI_DXGI_RGB
++typedef struct _WNDMSG
+ {
+-    FLOAT Red;
+-    FLOAT Green;
+-    FLOAT Blue;
+-} D3DDDI_DXGI_RGB;
++    UINT maxMsgs;
++    UCHAR *abMsgs;
++} WNDMSG, *PWNDMSG;
++
++typedef struct _RTL_ACTIVATION_CONTEXT_STACK_FRAME RTL_ACTIVATION_CONTEXT_STACK_FRAME;
++
++struct _RTL_ACTIVATION_CONTEXT_STACK_FRAME
++{
++    RTL_ACTIVATION_CONTEXT_STACK_FRAME *Previous;
++    ACTIVATION_CONTEXT *ActivationContext;
++    ULONG Flags;
++};
+ 
+ typedef struct _TP_CALLBACK_ENVIRON_V3
+ {
+@@ -2202,24 +2200,22 @@
+     INT unused;
+ } HICON__;
+ 
+-typedef struct _ACCESS_REASONS
++typedef struct _DMM_COMMITVIDPNREQUEST_DIAGINFO
+ {
+-    ULONG Data[32];
+-} ACCESS_REASONS;
+-
+-typedef struct _OBJECT_HANDLE_INFORMATION
++    INT ClientType : 4;
++    INT VidPnChange : 4;
++    UCHAR ReclaimClonedTarget : 1;
++    UCHAR CleanupAfterFailedCommitVidPn : 1;
++    UCHAR ForceAllActiveVidPnModeListInvalidation : 1;
++    ULONG ModeChangeRequestId;
++} DMM_COMMITVIDPNREQUEST_DIAGINFO;
++
++typedef struct _OBJECT_HANDLE_INFORMATION
+ {
+     ULONG HandleAttributes;
+     ULONG GrantedAccess;
+ } OBJECT_HANDLE_INFORMATION;
+ 
+-typedef struct _STRING
+-{
+-    USHORT Length;
+-    USHORT MaximumLength;
+-    CHAR *Buffer;
+-} STRING, *PSTRING;
+-
+ typedef struct _TEXTMETRICW
+ {
+     LONG tmHeight;
+@@ -2244,12 +2240,31 @@
+     UCHAR tmCharSet;
+ } TEXTMETRICW, *PTEXTMETRICW;
+ 
++typedef struct _ACCESS_REASONS
++{
++    ULONG Data[32];
++} ACCESS_REASONS;
++
++typedef struct _GENERIC_MAPPING
++{
++    ULONG GenericRead;
++    ULONG GenericWrite;
++    ULONG GenericExecute;
++    ULONG GenericAll;
++} GENERIC_MAPPING;
++
+ typedef struct _XSTATE_FEATURE
+ {
+     ULONG Offset;
+     ULONG Size;
+ } XSTATE_FEATURE;
+ 
++typedef struct _TEB_ACTIVE_FRAME_CONTEXT
++{
++    ULONG Flags;
++    const char *FrameName;
++} TEB_ACTIVE_FRAME_CONTEXT;
++
+ typedef union _ULARGE_INTEGER
+ {
+     struct
+@@ -2265,20 +2280,30 @@
+     ULONGLONG QuadPart;
+ } ULARGE_INTEGER;
+ 
+-typedef struct _PFNCLIENTWORKER
++typedef struct _D3DKMDT_VIDPN_PRESENT_PATH_ROTATION_SUPPORT
+ {
+-    LONGLONG (*pfnButtonWndProc)(void);
+-    LONGLONG (*pfnComboBoxWndProc)(void);
+-    LONGLONG (*pfnComboListBoxProc)(void);
+-    LONGLONG (*pfnDialogWndProc)(void);
+-    LONGLONG (*pfnEditWndProc)(void);
+-    LONGLONG (*pfnListBoxWndProc)(void);
+-    LONGLONG (*pfnMDIClientWndProc)(void);
+-    LONGLONG (*pfnStaticWndProc)(void);
+-    LONGLONG (*pfnImeWndProc)(void);
+-    LONGLONG (*pfnGhostWndProc)(void);
+-    LONGLONG (*pfnCtfHookProc)(void);
+-} PFNCLIENTWORKER, *PPFNCLIENTWORKER;
++    UINT Identity : 1;
++    UINT Rotate90 : 1;
++    UINT Rotate180 : 1;
++    UINT Rotate270 : 1;
++} D3DKMDT_VIDPN_PRESENT_PATH_ROTATION_SUPPORT;
++
++typedef struct _D3DKMDT_VIDPN_PRESENT_PATH_SCALING_SUPPORT
++{
++    UINT Identity : 1;
++    UINT Centered : 1;
++    UINT Stretched : 1;
++    UINT AspectRatioCenteredMax : 1;
++    UINT Custom : 1;
++} D3DKMDT_VIDPN_PRESENT_PATH_SCALING_SUPPORT;
++
++typedef struct _D3DKMDT_VIDPN_PRESENT_PATH_COPYPROTECTION_SUPPORT
++{
++    UINT NoProtection : 1;
++    UINT MacroVisionApsTrigger : 1;
++    UINT MacroVisionFull : 1;
++    UINT Reserved : 29;
++} D3DKMDT_VIDPN_PRESENT_PATH_COPYPROTECTION_SUPPORT;
+ 
+ typedef struct _DXGK_DIAG_HEADER
+ {
+@@ -2298,11 +2323,6 @@
+     VOID *trace[6];
+ } POOLRECORD, *PPOOLRECORD;
+ 
+-typedef struct _KFLOATING_SAVE
+-{
+-    ULONG Dummy;
+-} KFLOATING_SAVE;
+-
+ typedef struct _WM_VALUES_STRINGS
+ {
+     CHAR *pszName;
+@@ -2317,11 +2337,10 @@
+     ULONG Reserved;
+ } EVENT_DATA_DESCRIPTOR;
+ 
+-typedef struct _TEB_ACTIVE_FRAME_CONTEXT
++typedef struct _KFLOATING_SAVE
+ {
+-    ULONG Flags;
+-    const char *FrameName;
+-} TEB_ACTIVE_FRAME_CONTEXT;
++    ULONG Dummy;
++} KFLOATING_SAVE;
+ 
+ typedef struct _EVENT_DESCRIPTOR
+ {
+@@ -2334,14 +2353,6 @@
+     ULONGLONG Keyword;
+ } EVENT_DESCRIPTOR;
+ 
+-typedef struct _GENERIC_MAPPING
+-{
+-    ULONG GenericRead;
+-    ULONG GenericWrite;
+-    ULONG GenericExecute;
+-    ULONG GenericAll;
+-} GENERIC_MAPPING;
+-
+ typedef struct _GDI_TEB_BATCH
+ {
+     ULONG Offset;
+@@ -2349,12 +2360,33 @@
+     ULONG Buffer[310];
+ } GDI_TEB_BATCH;
+ 
++typedef struct _OBJECT_DUMP_CONTROL
++{
++    VOID *Stream;
++    ULONG Detail;
++} OBJECT_DUMP_CONTROL;
++
+ typedef struct _CLIENT_ID
+ {
+     VOID *UniqueProcess;
+     VOID *UniqueThread;
+ } CLIENT_ID;
+ 
++typedef struct _PFNCLIENTWORKER
++{
++    LONGLONG (*pfnButtonWndProc)(void);
++    LONGLONG (*pfnComboBoxWndProc)(void);
++    LONGLONG (*pfnComboListBoxProc)(void);
++    LONGLONG (*pfnDialogWndProc)(void);
++    LONGLONG (*pfnEditWndProc)(void);
++    LONGLONG (*pfnListBoxWndProc)(void);
++    LONGLONG (*pfnMDIClientWndProc)(void);
++    LONGLONG (*pfnStaticWndProc)(void);
++    LONGLONG (*pfnImeWndProc)(void);
++    LONGLONG (*pfnGhostWndProc)(void);
++    LONGLONG (*pfnCtfHookProc)(void);
++} PFNCLIENTWORKER, *PPFNCLIENTWORKER;
++
+ typedef struct _OEMBITMAPINFO
+ {
+     INT x;
+@@ -2363,51 +2395,17 @@
+     INT cy;
+ } OEMBITMAPINFO, *POEMBITMAPINFO;
+ 
+-typedef struct _PROFILEVALUEINFO
+-{
+-    ULONG dwValue;
+-    UINT uSection;
+-    const wchar_t *pwszKeyName;
+-} PROFILEVALUEINFO, *PPROFILEVALUEINFO;
+-
+-typedef struct _DMM_COMMITVIDPNREQUEST_DIAGINFO
+-{
+-    INT ClientType : 4;
+-    INT VidPnChange : 4;
+-    UCHAR ReclaimClonedTarget : 1;
+-    UCHAR CleanupAfterFailedCommitVidPn : 1;
+-    UCHAR ForceAllActiveVidPnModeListInvalidation : 1;
+-    ULONG ModeChangeRequestId;
+-} DMM_COMMITVIDPNREQUEST_DIAGINFO;
+-
+-typedef struct _IMAGE_DOS_HEADER
++typedef struct _LIST_ENTRY32
+ {
+-    USHORT e_magic;
+-    USHORT e_cblp;
+-    USHORT e_cp;
+-    USHORT e_crlc;
+-    USHORT e_cparhdr;
+-    USHORT e_minalloc;
+-    USHORT e_maxalloc;
+-    USHORT e_ss;
+-    USHORT e_sp;
+-    USHORT e_csum;
+-    USHORT e_ip;
+-    USHORT e_cs;
+-    USHORT e_lfarlc;
+-    USHORT e_ovno;
+-    USHORT e_res[4];
+-    USHORT e_oemid;
+-    USHORT e_oeminfo;
+-    USHORT e_res2[10];
+-    LONG e_lfanew;
+-} IMAGE_DOS_HEADER;
++    ULONG Flink;
++    ULONG Blink;
++} LIST_ENTRY32;
+ 
+-typedef struct _OBJECT_DUMP_CONTROL
++typedef struct _DMM_VIDPNSET_SERIALIZATION
+ {
+-    VOID *Stream;
+-    ULONG Detail;
+-} OBJECT_DUMP_CONTROL;
++    UCHAR NumVidPns;
++    ULONG VidPnOffset[1];
++} DMM_VIDPNSET_SERIALIZATION;
+ 
+ typedef struct _TOUCHINPUT
+ {
+@@ -2447,18 +2445,13 @@
+     DMM_VIDPN_MONITOR_TYPE MonitorType;
+ } DMM_MONITOR_SERIALIZATION;
+ 
+-typedef struct _RTL_DYNAMIC_HASH_TABLE
++typedef struct _DMM_MONITORDESCRIPTOR_SERIALIZATION
+ {
+-    ULONG Flags;
+-    ULONG Shift;
+-    ULONG TableSize;
+-    ULONG Pivot;
+-    ULONG DivisorMask;
+-    ULONG NumEntries;
+-    ULONG NonEmptyBuckets;
+-    ULONG NumEnumerators;
+-    VOID *Directory;
+-} RTL_DYNAMIC_HASH_TABLE;
++    UINT Id;
++    D3DKMDT_MONITOR_DESCRIPTOR_TYPE Type;
++    D3DKMDT_MONITOR_CAPABILITIES_ORIGIN Origin;
++    UCHAR Data[128];
++} DMM_MONITORDESCRIPTOR_SERIALIZATION;
+ 
+ typedef struct _DMM_VIDPN_SERIALIZATION
+ {
+@@ -2467,6 +2460,13 @@
+     ULONG PathsFromSourceSerializationOffsets[1];
+ } DMM_VIDPN_SERIALIZATION;
+ 
++typedef struct _PROFILEVALUEINFO
++{
++    ULONG dwValue;
++    UINT uSection;
++    const wchar_t *pwszKeyName;
++} PROFILEVALUEINFO, *PPROFILEVALUEINFO;
++
+ typedef struct _SM_VALUES_STRINGS
+ {
+     CHAR *pszName;
+@@ -2475,6 +2475,12 @@
+     SM_STORAGE_MODIFIER StorageType;
+ } SM_VALUES_STRINGS;
+ 
++typedef struct _VK_VALUES_STRINGS
++{
++    CHAR *pszMultiNames;
++    UCHAR fReserved;
++} VK_VALUES_STRINGS;
++
+ typedef struct _SLIST_ENTRY SLIST_ENTRY;
+ 
+ struct _SLIST_ENTRY
+@@ -2488,23 +2494,18 @@
+     ULONG Information;
+ } IO_STATUS_BLOCK32;
+ 
+-typedef struct _DMM_VIDPNSET_SERIALIZATION
+-{
+-    UCHAR NumVidPns;
+-    ULONG VidPnOffset[1];
+-} DMM_VIDPNSET_SERIALIZATION;
+-
+-typedef struct _VK_VALUES_STRINGS
++typedef struct _TXN_PARAMETER_BLOCK
+ {
+-    CHAR *pszMultiNames;
+-    UCHAR fReserved;
+-} VK_VALUES_STRINGS;
++    USHORT Length;
++    USHORT TxFsContext;
++    VOID *TransactionObject;
++} TXN_PARAMETER_BLOCK;
+ 
+-typedef struct _LIST_ENTRY32
++typedef struct _DMM_COFUNCPATHSMODALITY_SERIALIZATION
+ {
+-    ULONG Flink;
+-    ULONG Blink;
+-} LIST_ENTRY32;
++    UCHAR NumPathsFromSource;
++    ULONG PathAndTargetModeSetOffset[1];
++} DMM_COFUNCPATHSMODALITY_SERIALIZATION;
+ 
+ typedef struct _LIST_ENTRY64
+ {
+@@ -2512,11 +2513,10 @@
+     ULONGLONG Blink;
+ } LIST_ENTRY64;
+ 
+-typedef struct _DMM_COFUNCPATHSMODALITY_SERIALIZATION
++typedef struct _CONTEXT32_UPDATE
+ {
+-    UCHAR NumPathsFromSource;
+-    ULONG PathAndTargetModeSetOffset[1];
+-} DMM_COFUNCPATHSMODALITY_SERIALIZATION;
++    ULONG NumberEntries;
++} CONTEXT32_UPDATE;
+ 
+ typedef struct _DMM_COMMITVIDPNREQUESTSET_SERIALIZATION
+ {
+@@ -2524,37 +2524,21 @@
+     ULONG CommitVidPnRequestOffset[1];
+ } DMM_COMMITVIDPNREQUESTSET_SERIALIZATION;
+ 
+-typedef struct _KAPC KAPC, *PKAPC;
+-
+-struct _KAPC
++typedef struct _WHEA_ERROR_RECORD_SECTION_DESCRIPTOR
+ {
+-    UCHAR Type;
+-    UCHAR SpareByte0;
+-    UCHAR Size;
+-    UCHAR SpareByte1;
+-    ULONG SpareLong0;
+-    KTHREAD *Thread;
+-    LIST_ENTRY ApcListEntry;
+-    VOID (*KernelRoutine)(PKAPC, VOID (**)(VOID *, VOID *, VOID *), VOID **, VOID **, VOID **);
+-    VOID (*RundownRoutine)(PKAPC);
+-    VOID (*NormalRoutine)(VOID *, VOID *, VOID *);
+-    VOID *NormalContext;
+-    VOID *SystemArgument1;
+-    VOID *SystemArgument2;
+-    CHAR ApcStateIndex;
+-    CHAR ApcMode;
+-    UCHAR Inserted;
+-};
++    ULONG SectionOffset;
++    ULONG SectionLength;
++    WHEA_REVISION Revision;
++    WHEA_ERROR_RECORD_SECTION_DESCRIPTOR_VALIDBITS ValidBits;
++    UCHAR Reserved;
++    WHEA_ERROR_RECORD_SECTION_DESCRIPTOR_FLAGS Flags;
++    GUID SectionType;
++    GUID FRUId;
++    WHEA_ERROR_SEVERITY SectionSeverity;
++    CHAR FRUText[20];
++} WHEA_ERROR_RECORD_SECTION_DESCRIPTOR;
+ 
+-typedef struct _IO_DRIVER_CREATE_CONTEXT
+-{
+-    SHORT Size;
+-    ECP_LIST *ExtraCreateParameter;
+-    VOID *DeviceObjectHint;
+-    TXN_PARAMETER_BLOCK *TxnParameters;
+-} IO_DRIVER_CREATE_CONTEXT;
+-
+-typedef struct _SCATTER_GATHER_ELEMENT
++typedef struct _SCATTER_GATHER_ELEMENT
+ {
+     LARGE_INTEGER Address;
+     ULONG Length;
+@@ -2567,12 +2551,82 @@
+     ULONG Attributes;
+ } LUID_AND_ATTRIBUTES;
+ 
++typedef struct _KSPECIAL_REGISTERS
++{
++    ULONGLONG Cr0;
++    ULONGLONG Cr2;
++    ULONGLONG Cr3;
++    ULONGLONG Cr4;
++    ULONGLONG KernelDr0;
++    ULONGLONG KernelDr1;
++    ULONGLONG KernelDr2;
++    ULONGLONG KernelDr3;
++    ULONGLONG KernelDr6;
++    ULONGLONG KernelDr7;
++    KDESCRIPTOR Gdtr;
++    KDESCRIPTOR Idtr;
++    USHORT Tr;
++    USHORT Ldtr;
++    ULONG MxCsr;
++    ULONGLONG DebugControl;
++    ULONGLONG LastBranchToRip;
++    ULONGLONG LastBranchFromRip;
++    ULONGLONG LastExceptionToRip;
++    ULONGLONG LastExceptionFromRip;
++    ULONGLONG Cr8;
++    ULONGLONG MsrGsBase;
++    ULONGLONG MsrGsSwap;
++    ULONGLONG MsrStar;
++    ULONGLONG MsrLStar;
++    ULONGLONG MsrCStar;
++    ULONGLONG MsrSyscallMask;
++} KSPECIAL_REGISTERS;
++
++typedef struct _XSAVE_FORMAT
++{
++    USHORT ControlWord;
++    USHORT StatusWord;
++    UCHAR TagWord;
++    UCHAR Reserved1;
++    USHORT ErrorOpcode;
++    ULONG ErrorOffset;
++    USHORT ErrorSelector;
++    USHORT Reserved2;
++    ULONG DataOffset;
++    USHORT DataSelector;
++    USHORT Reserved3;
++    ULONG MxCsr;
++    ULONG MxCsr_Mask;
++    M128A FloatRegisters[8];
++    M128A XmmRegisters[16];
++    UCHAR Reserved4[96];
++} XSAVE_FORMAT;
++
+ typedef struct _CURDIR
+ {
+     UNICODE_STRING DosPath;
+     VOID *Handle;
+ } CURDIR, *PCURDIR;
+ 
++typedef struct _RTL_DRIVE_LETTER_CURDIR
++{
++    USHORT Flags;
++    USHORT Length;
++    ULONG TimeStamp;
++    STRING DosPath;
++} RTL_DRIVE_LETTER_CURDIR;
++
++typedef struct _D3DKMDT_VIDEO_SIGNAL_INFO
++{
++    D3DKMDT_VIDEO_SIGNAL_STANDARD VideoStandard;
++    D3DKMDT_2DREGION TotalSize;
++    D3DKMDT_2DREGION ActiveSize;
++    D3DDDI_RATIONAL VSyncFreq;
++    D3DDDI_RATIONAL HSyncFreq;
++    ULONGLONG PixelRate;
++    D3DDDI_VIDEO_SIGNAL_SCANLINE_ORDERING ScanLineOrdering;
++} D3DKMDT_VIDEO_SIGNAL_INFO;
++
+ typedef struct _OBJECT_ATTRIBUTES
+ {
+     ULONG Length;
+@@ -2583,6 +2637,16 @@
+     VOID *SecurityQualityOfService;
+ } OBJECT_ATTRIBUTES;
+ 
++typedef struct _D3DKMDT_GRAPHICS_RENDERING_FORMAT
++{
++    D3DKMDT_2DREGION PrimSurfSize;
++    D3DKMDT_2DREGION VisibleRegionSize;
++    ULONG Stride;
++    D3DDDIFORMAT PixelFormat;
++    D3DKMDT_COLOR_BASIS ColorBasis;
++    D3DKMDT_PIXEL_VALUE_ACCESS_MODE PixelValueAccessMode;
++} D3DKMDT_GRAPHICS_RENDERING_FORMAT;
++
+ typedef struct _VK_TO_FUNCTION_TABLE
+ {
+     UCHAR Vk;
+@@ -2593,6 +2657,31 @@
+     VK_FUNCTION_PARAM NLSFEProcAlt[8];
+ } VK_TO_FUNCTION_TABLE;
+ 
++typedef struct _RTL_CRITICAL_SECTION_DEBUG RTL_CRITICAL_SECTION_DEBUG;
++typedef struct _RTL_CRITICAL_SECTION RTL_CRITICAL_SECTION;
++
++struct _RTL_CRITICAL_SECTION_DEBUG
++{
++    USHORT Type;
++    USHORT CreatorBackTraceIndex;
++    RTL_CRITICAL_SECTION *CriticalSection;
++    LIST_ENTRY ProcessLocksList;
++    ULONG EntryCount;
++    ULONG ContentionCount;
++    ULONG Flags;
++    USHORT CreatorBackTraceIndexHigh;
++    USHORT SpareUSHORT;
++};
++struct _RTL_CRITICAL_SECTION
++{
++    RTL_CRITICAL_SECTION_DEBUG *DebugInfo;
++    LONG LockCount;
++    LONG RecursionCount;
++    VOID *OwningThread;
++    VOID *LockSemaphore;
++    ULONGLONG SpinCount;
++};
++
+ typedef struct _MONITOR MONITOR, *PMONITOR;
+ 
+ struct _MONITOR
+@@ -2612,46 +2701,6 @@
+     PMONITOR Blink;
+ };
+ 
+-typedef union _WHEA_TIMESTAMP
+-{
+-    struct
+-    {
+-        ULONGLONG Seconds : 8;
+-        ULONGLONG Minutes : 8;
+-        ULONGLONG Hours : 8;
+-        ULONGLONG Precise : 1;
+-        ULONGLONG Reserved : 7;
+-        ULONGLONG Day : 8;
+-        ULONGLONG Month : 8;
+-        ULONGLONG Year : 8;
+-        ULONGLONG Century : 8;
+-    };
+-    LARGE_INTEGER AsLARGE_INTEGER;
+-} WHEA_TIMESTAMP;
+-
+-typedef struct _WHEA_ERROR_RECORD_SECTION_DESCRIPTOR
+-{
+-    ULONG SectionOffset;
+-    ULONG SectionLength;
+-    WHEA_REVISION Revision;
+-    WHEA_ERROR_RECORD_SECTION_DESCRIPTOR_VALIDBITS ValidBits;
+-    UCHAR Reserved;
+-    WHEA_ERROR_RECORD_SECTION_DESCRIPTOR_FLAGS Flags;
+-    GUID SectionType;
+-    GUID FRUId;
+-    WHEA_ERROR_SEVERITY SectionSeverity;
+-    CHAR FRUText[20];
+-} WHEA_ERROR_RECORD_SECTION_DESCRIPTOR;
+-
+-typedef struct _TP_DIRECT TP_DIRECT;
+-
+-struct _TP_DIRECT
+-{
+-    VOID (*Callback)(TP_CALLBACK_INSTANCE *, TP_DIRECT *, VOID *, IO_STATUS_BLOCK *);
+-    ULONG NumaNode;
+-    UCHAR IdealProcessor;
+-};
+-
+ typedef struct _D3DKMDT_FREQUENCY_RANGE
+ {
+     D3DDDI_RATIONAL MinVSyncFreq;
+@@ -2660,12 +2709,6 @@
+     D3DDDI_RATIONAL MaxHSyncFreq;
+ } D3DKMDT_FREQUENCY_RANGE;
+ 
+-typedef union _UAHMENUITEMMETRICS
+-{
+-    SIZE rgsizeBar[2];
+-    SIZE rgsizePopup[4];
+-} UAHMENUITEMMETRICS, *PUAHMENUITEMMETRICS;
+-
+ typedef struct _IMAGE_OPTIONAL_HEADER64
+ {
+     USHORT Magic;
+@@ -2707,6 +2750,29 @@
+     DMM_VIDPN_SERIALIZATION VidPnSerialization;
+ } DMM_COMMITVIDPNREQUEST_SERIALIZATION;
+ 
++typedef union _UAHMENUITEMMETRICS
++{
++    SIZE rgsizeBar[2];
++    SIZE rgsizePopup[4];
++} UAHMENUITEMMETRICS, *PUAHMENUITEMMETRICS;
++
++typedef struct _D3DDDI_GAMMA_RAMP_DXGI_1
++{
++    D3DDDI_DXGI_RGB Scale;
++    D3DDDI_DXGI_RGB Offset;
++    D3DDDI_DXGI_RGB GammaCurve[1025];
++} D3DDDI_GAMMA_RAMP_DXGI_1;
++
++typedef struct _DPISERVERINFO
++{
++    INT gclBorder;
++    HFONT__ *hCaptionFont;
++    HFONT__ *hMsgFont;
++    INT cxMsgFontChar;
++    INT cyMsgFontChar;
++    UINT wMaxBtnSize;
++} DPISERVERINFO, *PDPISERVERINFO;
++
+ typedef struct _SBINFO
+ {
+     INT WSBflags;
+@@ -2772,11 +2838,6 @@
+     GENERAL_LOOKASIDE_POOL L;
+ };
+ 
+-typedef struct _OBJECT_NAME_INFORMATION
+-{
+-    UNICODE_STRING Name;
+-} OBJECT_NAME_INFORMATION;
+-
+ typedef struct _MSG
+ {
+     HWND__ *hwnd;
+@@ -2787,15 +2848,11 @@
+     POINT pt;
+ } MSG, *PMSG;
+ 
+-typedef struct _DPISERVERINFO
++typedef struct _RTL_DYNAMIC_HASH_TABLE_ENTRY
+ {
+-    INT gclBorder;
+-    HFONT__ *hCaptionFont;
+-    HFONT__ *hMsgFont;
+-    INT cxMsgFontChar;
+-    INT cyMsgFontChar;
+-    UINT wMaxBtnSize;
+-} DPISERVERINFO, *PDPISERVERINFO;
++    LIST_ENTRY Linkage;
++    ULONGLONG Signature;
++} RTL_DYNAMIC_HASH_TABLE_ENTRY;
+ 
+ typedef struct _DISPATCHER_HEADER
+ {
+@@ -2857,20 +2914,11 @@
+     LIST_ENTRY WaitListHead;
+ } DISPATCHER_HEADER;
+ 
+-typedef struct _D3DKMDT_VIDPN_PRESENT_PATH_TRANSFORMATION
+-{
+-    D3DKMDT_VIDPN_PRESENT_PATH_SCALING Scaling;
+-    D3DKMDT_VIDPN_PRESENT_PATH_SCALING_SUPPORT ScalingSupport;
+-    D3DKMDT_VIDPN_PRESENT_PATH_ROTATION Rotation;
+-    D3DKMDT_VIDPN_PRESENT_PATH_ROTATION_SUPPORT RotationSupport;
+-} D3DKMDT_VIDPN_PRESENT_PATH_TRANSFORMATION;
+-
+-typedef struct _D3DDDI_GAMMA_RAMP_DXGI_1
++typedef struct _TP_NBQ_GUARD
+ {
+-    D3DDDI_DXGI_RGB Scale;
+-    D3DDDI_DXGI_RGB Offset;
+-    D3DDDI_DXGI_RGB GammaCurve[1025];
+-} D3DDDI_GAMMA_RAMP_DXGI_1;
++    LIST_ENTRY GuardLinks;
++    VOID *Guards[2];
++} TP_NBQ_GUARD;
+ 
+ typedef struct _IMEINFOEX
+ {
+@@ -2895,6 +2943,15 @@
+     UCHAR ModNumber[0];
+ } MODIFIERS, *PMODIFIERS;
+ 
++typedef struct _HANDLEENTRY
++{
++    PHEAD phead;
++    VOID *pOwner;
++    UCHAR bType;
++    UCHAR bFlags;
++    USHORT wUniq;
++} HANDLEENTRY, *PHANDLEENTRY;
++
+ typedef struct _VK_TO_WCHAR_TABLE
+ {
+     VK_TO_WCHARS1 *pVkToWchars;
+@@ -2902,13 +2959,31 @@
+     UCHAR cbSize;
+ } VK_TO_WCHAR_TABLE;
+ 
+-typedef struct _RTL_DRIVE_LETTER_CURDIR
++typedef struct _TEB_ACTIVE_FRAME TEB_ACTIVE_FRAME;
++
++struct _TEB_ACTIVE_FRAME
+ {
+-    USHORT Flags;
+-    USHORT Length;
+-    ULONG TimeStamp;
+-    STRING DosPath;
+-} RTL_DRIVE_LETTER_CURDIR;
++    ULONG Flags;
++    TEB_ACTIVE_FRAME *Previous;
++    TEB_ACTIVE_FRAME_CONTEXT *Context;
++};
++
++typedef struct _D3DKMDT_VIDPN_PRESENT_PATH_TRANSFORMATION
++{
++    D3DKMDT_VIDPN_PRESENT_PATH_SCALING Scaling;
++    D3DKMDT_VIDPN_PRESENT_PATH_SCALING_SUPPORT ScalingSupport;
++    D3DKMDT_VIDPN_PRESENT_PATH_ROTATION Rotation;
++    D3DKMDT_VIDPN_PRESENT_PATH_ROTATION_SUPPORT RotationSupport;
++} D3DKMDT_VIDPN_PRESENT_PATH_TRANSFORMATION;
++
++typedef struct _DXGK_DIAG_CODE_POINT_PACKET
++{
++    DXGK_DIAG_HEADER Header;
++    DXGK_DIAG_CODE_POINT_TYPE CodePointType;
++    UINT Param1;
++    UINT Param2;
++    UINT Param3;
++} DXGK_DIAG_CODE_POINT_PACKET;
+ 
+ typedef struct _D3DKMDT_VIDPN_PRESENT_PATH_COPYPROTECTION
+ {
+@@ -2918,17 +2993,6 @@
+     D3DKMDT_VIDPN_PRESENT_PATH_COPYPROTECTION_SUPPORT CopyProtectionSupport;
+ } D3DKMDT_VIDPN_PRESENT_PATH_COPYPROTECTION;
+ 
+-typedef struct _D3DKMDT_VIDEO_SIGNAL_INFO
+-{
+-    D3DKMDT_VIDEO_SIGNAL_STANDARD VideoStandard;
+-    D3DKMDT_2DREGION TotalSize;
+-    D3DKMDT_2DREGION ActiveSize;
+-    D3DDDI_RATIONAL VSyncFreq;
+-    D3DDDI_RATIONAL HSyncFreq;
+-    ULONGLONG PixelRate;
+-    D3DDDI_VIDEO_SIGNAL_SCANLINE_ORDERING ScanLineOrdering;
+-} D3DKMDT_VIDEO_SIGNAL_INFO;
+-
+ typedef struct _RTL_AVL_TABLE RTL_AVL_TABLE;
+ 
+ struct _RTL_AVL_TABLE
+@@ -2946,6 +3010,19 @@
+     VOID *TableContext;
+ };
+ 
++typedef struct _PEB_LDR_DATA
++{
++    ULONG Length;
++    UCHAR Initialized;
++    VOID *SsHandle;
++    LIST_ENTRY InLoadOrderModuleList;
++    LIST_ENTRY InMemoryOrderModuleList;
++    LIST_ENTRY InInitializationOrderModuleList;
++    VOID *EntryInProgress;
++    UCHAR ShutdownInProgress;
++    VOID *ShutdownThreadId;
++} PEB_LDR_DATA;
++
+ typedef struct _HID_TLC_INFO
+ {
+     LIST_ENTRY link;
+@@ -3083,36 +3160,13 @@
+     } u;
+ } CM_PARTIAL_RESOURCE_DESCRIPTOR;
+ 
+-typedef struct _PEB_LDR_DATA
+-{
+-    ULONG Length;
+-    UCHAR Initialized;
+-    VOID *SsHandle;
+-    LIST_ENTRY InLoadOrderModuleList;
+-    LIST_ENTRY InMemoryOrderModuleList;
+-    LIST_ENTRY InInitializationOrderModuleList;
+-    VOID *EntryInProgress;
+-    UCHAR ShutdownInProgress;
+-    VOID *ShutdownThreadId;
+-} PEB_LDR_DATA;
+-
+-typedef struct _ACTIVATION_CONTEXT_STACK
+-{
+-    RTL_ACTIVATION_CONTEXT_STACK_FRAME *ActiveFrame;
+-    LIST_ENTRY FrameListCache;
+-    ULONG Flags;
+-    ULONG NextCookieSequenceNumber;
+-    ULONG StackId;
+-} ACTIVATION_CONTEXT_STACK;
+-
+-typedef struct _TEB_ACTIVE_FRAME TEB_ACTIVE_FRAME;
+-
+-struct _TEB_ACTIVE_FRAME
++typedef struct _XSTATE_CONFIGURATION
+ {
+-    ULONG Flags;
+-    TEB_ACTIVE_FRAME *Previous;
+-    TEB_ACTIVE_FRAME_CONTEXT *Context;
+-};
++    ULONGLONG EnabledFeatures;
++    ULONG Size;
++    ULONG OptimizedSave : 1;
++    XSTATE_FEATURE Features[64];
++} XSTATE_CONFIGURATION;
+ 
+ typedef struct _WHEA_ERROR_PACKET_V2
+ {
+@@ -3134,108 +3188,72 @@
+     ULONG PshedDataLength;
+ } WHEA_ERROR_PACKET_V2;
+ 
+-typedef struct _KSPECIAL_REGISTERS
++typedef struct _W32THREAD
+ {
+-    ULONGLONG Cr0;
+-    ULONGLONG Cr2;
+-    ULONGLONG Cr3;
+-    ULONGLONG Cr4;
+-    ULONGLONG KernelDr0;
+-    ULONGLONG KernelDr1;
+-    ULONGLONG KernelDr2;
+-    ULONGLONG KernelDr3;
+-    ULONGLONG KernelDr6;
+-    ULONGLONG KernelDr7;
+-    KDESCRIPTOR Gdtr;
+-    KDESCRIPTOR Idtr;
+-    USHORT Tr;
+-    USHORT Ldtr;
+-    ULONG MxCsr;
+-    ULONGLONG DebugControl;
+-    ULONGLONG LastBranchToRip;
+-    ULONGLONG LastBranchFromRip;
+-    ULONGLONG LastExceptionToRip;
+-    ULONGLONG LastExceptionFromRip;
+-    ULONGLONG Cr8;
+-    ULONGLONG MsrGsBase;
+-    ULONGLONG MsrGsSwap;
+-    ULONGLONG MsrStar;
+-    ULONGLONG MsrLStar;
+-    ULONGLONG MsrCStar;
+-    ULONGLONG MsrSyscallMask;
+-} KSPECIAL_REGISTERS;
++    ETHREAD *pEThread;
++    ULONG RefCount;
++    PTL ptlW32;
++    VOID *pgdiDcattr;
++    VOID *pgdiBrushAttr;
++    VOID *pUMPDObjs;
++    VOID *pUMPDHeap;
++    VOID *pUMPDObj;
++    VOID *pProxyPort;
++    VOID *pClientID;
++    LIST_ENTRY GdiTmpTgoList;
++    ULONG pRBRecursionCount;
++    ULONG pNonRBRecursionCount;
++    TLSPRITESTATE tlSpriteState;
++    VOID *pSpriteState;
++    VOID *pDevHTInfo;
++    ULONG ulDevHTInfoUniqueness;
++    VOID *pdcoAA;
++    VOID *pdcoRender;
++    VOID *pdcoSrc;
++    UCHAR bEnableEngUpdateDeviceSurface;
++    UCHAR bIncludeSprites;
++    ULONG ulWindowSystemRendering;
++    ULONG iVisRgnUniqueness;
++} W32THREAD, *PW32THREAD;
+ 
+-typedef struct _TP_NBQ_GUARD
++typedef union _WHEA_TIMESTAMP
+ {
+-    LIST_ENTRY GuardLinks;
+-    VOID *Guards[2];
+-} TP_NBQ_GUARD;
++    struct
++    {
++        ULONGLONG Seconds : 8;
++        ULONGLONG Minutes : 8;
++        ULONGLONG Hours : 8;
++        ULONGLONG Precise : 1;
++        ULONGLONG Reserved : 7;
++        ULONGLONG Day : 8;
++        ULONGLONG Month : 8;
++        ULONGLONG Year : 8;
++        ULONGLONG Century : 8;
++    };
++    LARGE_INTEGER AsLARGE_INTEGER;
++} WHEA_TIMESTAMP;
+ 
+-typedef struct _XSAVE_FORMAT
++typedef struct _EX_PUSH_LOCK_CACHE_AWARE
+ {
+-    USHORT ControlWord;
+-    USHORT StatusWord;
+-    UCHAR TagWord;
+-    UCHAR Reserved1;
+-    USHORT ErrorOpcode;
+-    ULONG ErrorOffset;
+-    USHORT ErrorSelector;
+-    USHORT Reserved2;
+-    ULONG DataOffset;
+-    USHORT DataSelector;
+-    USHORT Reserved3;
+-    ULONG MxCsr;
+-    ULONG MxCsr_Mask;
+-    M128A FloatRegisters[8];
+-    M128A XmmRegisters[16];
+-    UCHAR Reserved4[96];
+-} XSAVE_FORMAT;
++    EX_PUSH_LOCK *Locks[1];
++} EX_PUSH_LOCK_CACHE_AWARE;
+ 
+-typedef struct _RTL_DYNAMIC_HASH_TABLE_ENTRY
++typedef struct _RTL_DYNAMIC_HASH_TABLE_CONTEXT
+ {
+-    LIST_ENTRY Linkage;
++    LIST_ENTRY *ChainHead;
++    LIST_ENTRY *PrevLinkage;
+     ULONGLONG Signature;
+-} RTL_DYNAMIC_HASH_TABLE_ENTRY;
++} RTL_DYNAMIC_HASH_TABLE_CONTEXT;
+ 
+-typedef struct _RTL_CRITICAL_SECTION_DEBUG RTL_CRITICAL_SECTION_DEBUG;
+-typedef struct _RTL_CRITICAL_SECTION RTL_CRITICAL_SECTION;
++typedef struct _TP_DIRECT TP_DIRECT;
+ 
+-struct _RTL_CRITICAL_SECTION_DEBUG
+-{
+-    USHORT Type;
+-    USHORT CreatorBackTraceIndex;
+-    RTL_CRITICAL_SECTION *CriticalSection;
+-    LIST_ENTRY ProcessLocksList;
+-    ULONG EntryCount;
+-    ULONG ContentionCount;
+-    ULONG Flags;
+-    USHORT CreatorBackTraceIndexHigh;
+-    USHORT SpareUSHORT;
+-};
+-struct _RTL_CRITICAL_SECTION
++struct _TP_DIRECT
+ {
+-    RTL_CRITICAL_SECTION_DEBUG *DebugInfo;
+-    LONG LockCount;
+-    LONG RecursionCount;
+-    VOID *OwningThread;
+-    VOID *LockSemaphore;
+-    ULONGLONG SpinCount;
++    VOID (*Callback)(TP_CALLBACK_INSTANCE *, TP_DIRECT *, VOID *, IO_STATUS_BLOCK *);
++    ULONG NumaNode;
++    UCHAR IdealProcessor;
+ };
+ 
+-typedef struct _DXGK_DIAG_CODE_POINT_PACKET
+-{
+-    DXGK_DIAG_HEADER Header;
+-    DXGK_DIAG_CODE_POINT_TYPE CodePointType;
+-    UINT Param1;
+-    UINT Param2;
+-    UINT Param3;
+-} DXGK_DIAG_CODE_POINT_PACKET;
+-
+-typedef struct _EX_PUSH_LOCK_CACHE_AWARE
+-{
+-    EX_PUSH_LOCK *Locks[1];
+-} EX_PUSH_LOCK_CACHE_AWARE;
+-
+ typedef struct _DMM_MONITORDESCRIPTORSET_SERIALIZATION
+ {
+     UCHAR NumDescriptors;
+@@ -3264,40 +3282,10 @@
+     UCHAR Inserted;
+ } KDEVICE_QUEUE_ENTRY;
+ 
+-typedef struct _RTL_DYNAMIC_HASH_TABLE_CONTEXT
+-{
+-    LIST_ENTRY *ChainHead;
+-    LIST_ENTRY *PrevLinkage;
+-    ULONGLONG Signature;
+-} RTL_DYNAMIC_HASH_TABLE_CONTEXT;
+-
+-typedef struct _W32THREAD
++typedef struct _OBJECT_NAME_INFORMATION
+ {
+-    ETHREAD *pEThread;
+-    ULONG RefCount;
+-    PTL ptlW32;
+-    VOID *pgdiDcattr;
+-    VOID *pgdiBrushAttr;
+-    VOID *pUMPDObjs;
+-    VOID *pUMPDHeap;
+-    VOID *pUMPDObj;
+-    VOID *pProxyPort;
+-    VOID *pClientID;
+-    LIST_ENTRY GdiTmpTgoList;
+-    ULONG pRBRecursionCount;
+-    ULONG pNonRBRecursionCount;
+-    TLSPRITESTATE tlSpriteState;
+-    VOID *pSpriteState;
+-    VOID *pDevHTInfo;
+-    ULONG ulDevHTInfoUniqueness;
+-    VOID *pdcoAA;
+-    VOID *pdcoRender;
+-    VOID *pdcoSrc;
+-    UCHAR bEnableEngUpdateDeviceSurface;
+-    UCHAR bIncludeSprites;
+-    ULONG ulWindowSystemRendering;
+-    ULONG iVisRgnUniqueness;
+-} W32THREAD, *PW32THREAD;
++    UNICODE_STRING Name;
++} OBJECT_NAME_INFORMATION;
+ 
+ typedef struct _FILE_NETWORK_OPEN_INFORMATION
+ {
+@@ -3328,14 +3316,6 @@
+     ULONG FileAttributes;
+ } FILE_BASIC_INFORMATION;
+ 
+-typedef struct _XSTATE_CONFIGURATION
+-{
+-    ULONGLONG EnabledFeatures;
+-    ULONG Size;
+-    ULONG OptimizedSave : 1;
+-    XSTATE_FEATURE Features[64];
+-} XSTATE_CONFIGURATION;
+-
+ typedef struct _MAILSLOT_CREATE_PARAMETERS
+ {
+     ULONG MailslotQuota;
+@@ -3344,16 +3324,6 @@
+     UCHAR TimeoutSpecified;
+ } MAILSLOT_CREATE_PARAMETERS;
+ 
+-typedef struct _D3DKMDT_GRAPHICS_RENDERING_FORMAT
+-{
+-    D3DKMDT_2DREGION PrimSurfSize;
+-    D3DKMDT_2DREGION VisibleRegionSize;
+-    ULONG Stride;
+-    D3DDDIFORMAT PixelFormat;
+-    D3DKMDT_COLOR_BASIS ColorBasis;
+-    D3DKMDT_PIXEL_VALUE_ACCESS_MODE PixelValueAccessMode;
+-} D3DKMDT_GRAPHICS_RENDERING_FORMAT;
+-
+ typedef struct _NAMED_PIPE_CREATE_PARAMETERS
+ {
+     ULONG NamedPipeType;
+@@ -3366,14 +3336,13 @@
+     UCHAR TimeoutSpecified;
+ } NAMED_PIPE_CREATE_PARAMETERS;
+ 
+-typedef struct _HANDLEENTRY
++typedef struct _IO_DRIVER_CREATE_CONTEXT
+ {
+-    PHEAD phead;
+-    VOID *pOwner;
+-    UCHAR bType;
+-    UCHAR bFlags;
+-    USHORT wUniq;
+-} HANDLEENTRY, *PHANDLEENTRY;
++    SHORT Size;
++    ECP_LIST *ExtraCreateParameter;
++    VOID *DeviceObjectHint;
++    TXN_PARAMETER_BLOCK *TxnParameters;
++} IO_DRIVER_CREATE_CONTEXT;
+ 
+ typedef struct _IO_RESOURCE_DESCRIPTOR
+ {
+@@ -3461,6 +3430,37 @@
+     } u;
+ } IO_RESOURCE_DESCRIPTOR;
+ 
++typedef struct _ACTIVATION_CONTEXT_STACK
++{
++    RTL_ACTIVATION_CONTEXT_STACK_FRAME *ActiveFrame;
++    LIST_ENTRY FrameListCache;
++    ULONG Flags;
++    ULONG NextCookieSequenceNumber;
++    ULONG StackId;
++} ACTIVATION_CONTEXT_STACK;
++
++typedef struct _KAPC KAPC, *PKAPC;
++
++struct _KAPC
++{
++    UCHAR Type;
++    UCHAR SpareByte0;
++    UCHAR Size;
++    UCHAR SpareByte1;
++    ULONG SpareLong0;
++    KTHREAD *Thread;
++    LIST_ENTRY ApcListEntry;
++    VOID (*KernelRoutine)(PKAPC, VOID (**)(VOID *, VOID *, VOID *), VOID **, VOID **, VOID **);
++    VOID (*RundownRoutine)(PKAPC);
++    VOID (*NormalRoutine)(VOID *, VOID *, VOID *);
++    VOID *NormalContext;
++    VOID *SystemArgument1;
++    VOID *SystemArgument2;
++    CHAR ApcStateIndex;
++    CHAR ApcMode;
++    UCHAR Inserted;
++};
++
+ typedef struct _SCATTER_GATHER_LIST
+ {
+     ULONG NumberOfElements;
+@@ -3468,12 +3468,98 @@
+     SCATTER_GATHER_ELEMENT Elements[0];
+ } SCATTER_GATHER_LIST;
+ 
+-typedef struct _PRIVILEGE_SET
++typedef struct _INITIAL_PRIVILEGE_SET
+ {
+     ULONG PrivilegeCount;
+     ULONG Control;
+-    LUID_AND_ATTRIBUTES Privilege[1];
+-} PRIVILEGE_SET;
++    LUID_AND_ATTRIBUTES Privilege[3];
++} INITIAL_PRIVILEGE_SET;
++
++typedef struct _D3DKMDT_GAMMA_RAMP
++{
++    D3DDDI_GAMMARAMP_TYPE Type;
++    ULONGLONG DataSize;
++    union
++    {
++        D3DDDI_GAMMA_RAMP_RGB256x3x16 *pRgb256x3x16;
++        D3DDDI_GAMMA_RAMP_DXGI_1 *pDxgi1;
++        VOID *pRaw;
++    } Data;
++} D3DKMDT_GAMMA_RAMP;
++
++typedef struct _CONTEXT
++{
++    ULONGLONG P1Home;
++    ULONGLONG P2Home;
++    ULONGLONG P3Home;
++    ULONGLONG P4Home;
++    ULONGLONG P5Home;
++    ULONGLONG P6Home;
++    ULONG ContextFlags;
++    ULONG MxCsr;
++    USHORT SegCs;
++    USHORT SegDs;
++    USHORT SegEs;
++    USHORT SegFs;
++    USHORT SegGs;
++    USHORT SegSs;
++    ULONG EFlags;
++    ULONGLONG Dr0;
++    ULONGLONG Dr1;
++    ULONGLONG Dr2;
++    ULONGLONG Dr3;
++    ULONGLONG Dr6;
++    ULONGLONG Dr7;
++    ULONGLONG Rax;
++    ULONGLONG Rcx;
++    ULONGLONG Rdx;
++    ULONGLONG Rbx;
++    ULONGLONG Rsp;
++    ULONGLONG Rbp;
++    ULONGLONG Rsi;
++    ULONGLONG Rdi;
++    ULONGLONG R8;
++    ULONGLONG R9;
++    ULONGLONG R10;
++    ULONGLONG R11;
++    ULONGLONG R12;
++    ULONGLONG R13;
++    ULONGLONG R14;
++    ULONGLONG R15;
++    ULONGLONG Rip;
++    union
++    {
++        XSAVE_FORMAT FltSave;
++        struct
++        {
++            M128A Header[2];
++            M128A Legacy[8];
++            M128A Xmm0;
++            M128A Xmm1;
++            M128A Xmm2;
++            M128A Xmm3;
++            M128A Xmm4;
++            M128A Xmm5;
++            M128A Xmm6;
++            M128A Xmm7;
++            M128A Xmm8;
++            M128A Xmm9;
++            M128A Xmm10;
++            M128A Xmm11;
++            M128A Xmm12;
++            M128A Xmm13;
++            M128A Xmm14;
++            M128A Xmm15;
++        };
++    };
++    M128A VectorRegister[26];
++    ULONGLONG VectorControl;
++    ULONGLONG DebugControl;
++    ULONGLONG LastBranchToRip;
++    ULONGLONG LastBranchFromRip;
++    ULONGLONG LastExceptionToRip;
++    ULONGLONG LastExceptionFromRip;
++} CONTEXT, *PCONTEXT;
+ 
+ typedef struct _D3DKMDT_VIDPN_TARGET_MODE
+ {
+@@ -3501,6 +3587,35 @@
+     IMAGE_OPTIONAL_HEADER64 OptionalHeader;
+ } IMAGE_NT_HEADERS64;
+ 
++typedef struct _RTL_DYNAMIC_HASH_TABLE_ENUMERATOR
++{
++    RTL_DYNAMIC_HASH_TABLE_ENTRY HashEntry;
++    LIST_ENTRY *ChainHead;
++    ULONG BucketIndex;
++} RTL_DYNAMIC_HASH_TABLE_ENUMERATOR;
++
++typedef struct _KEVENT
++{
++    DISPATCHER_HEADER Header;
++} KEVENT, *PKEVENT;
++
++typedef struct _TP_TASK_CALLBACKS TP_TASK_CALLBACKS;
++typedef struct _TP_TASK TP_TASK;
++
++struct _TP_TASK_CALLBACKS
++{
++    VOID (*ExecuteCallback)(TP_CALLBACK_INSTANCE *, TP_TASK *);
++    VOID (*Unposted)(TP_TASK *, TP_POOL *);
++};
++struct _TP_TASK
++{
++    TP_TASK_CALLBACKS *Callbacks;
++    ULONG NumaNode;
++    UCHAR IdealProcessor;
++    TP_NBQ_GUARD PostGuard;
++    VOID *NBQNode;
++};
++
+ typedef struct _GENERAL_LOOKASIDE
+ {
+     union
+@@ -3545,23 +3660,6 @@
+     ULONG Future[2];
+ } GENERAL_LOOKASIDE;
+ 
+-typedef struct _KEVENT
+-{
+-    DISPATCHER_HEADER Header;
+-} KEVENT, *PKEVENT;
+-
+-typedef struct _D3DKMDT_GAMMA_RAMP
+-{
+-    D3DDDI_GAMMARAMP_TYPE Type;
+-    ULONGLONG DataSize;
+-    union
+-    {
+-        D3DDDI_GAMMA_RAMP_RGB256x3x16 *pRgb256x3x16;
+-        D3DDDI_GAMMA_RAMP_DXGI_1 *pDxgi1;
+-        VOID *pRaw;
+-    } Data;
+-} D3DKMDT_GAMMA_RAMP;
+-
+ typedef struct _KbdLayer
+ {
+     PMODIFIERS pCharModifiers;
+@@ -3592,109 +3690,7 @@
+     USHORT *pusMouseVKey;
+ } KbdNlsLayer;
+ 
+-typedef struct _KUSER_SHARED_DATA
+-{
+-    ULONG TickCountLowDeprecated;
+-    ULONG TickCountMultiplier;
+-    KSYSTEM_TIME InterruptTime;
+-    KSYSTEM_TIME SystemTime;
+-    KSYSTEM_TIME TimeZoneBias;
+-    USHORT ImageNumberLow;
+-    USHORT ImageNumberHigh;
+-    WCHAR NtSystemRoot[260];
+-    ULONG MaxStackTraceDepth;
+-    ULONG CryptoExponent;
+-    ULONG TimeZoneId;
+-    ULONG LargePageMinimum;
+-    ULONG Reserved2[7];
+-    NT_PRODUCT_TYPE NtProductType;
+-    UCHAR ProductTypeIsValid;
+-    ULONG NtMajorVersion;
+-    ULONG NtMinorVersion;
+-    UCHAR ProcessorFeatures[64];
+-    ULONG Reserved1;
+-    ULONG Reserved3;
+-    volatile unsigned long TimeSlip;
+-    ALTERNATIVE_ARCHITECTURE_TYPE AlternativeArchitecture;
+-    ULONG AltArchitecturePad[1];
+-    LARGE_INTEGER SystemExpirationDate;
+-    ULONG SuiteMask;
+-    UCHAR KdDebuggerEnabled;
+-    UCHAR NXSupportPolicy;
+-    volatile unsigned long ActiveConsoleId;
+-    volatile unsigned long DismountCount;
+-    ULONG ComPlusPackage;
+-    ULONG LastSystemRITEventTickCount;
+-    ULONG NumberOfPhysicalPages;
+-    UCHAR SafeBootMode;
+-    union
+-    {
+-        UCHAR TscQpcData;
+-        struct
+-        {
+-            UCHAR TscQpcEnabled : 1;
+-            UCHAR TscQpcSpareFlag : 1;
+-            UCHAR TscQpcShift : 6;
+-        };
+-    };
+-    UCHAR TscQpcPad[2];
+-    union
+-    {
+-        ULONG SharedDataFlags;
+-        struct
+-        {
+-            ULONG DbgErrorPortPresent : 1;
+-            ULONG DbgElevationEnabled : 1;
+-            ULONG DbgVirtEnabled : 1;
+-            ULONG DbgInstallerDetectEnabled : 1;
+-            ULONG DbgSystemDllRelocated : 1;
+-            ULONG DbgDynProcessorEnabled : 1;
+-            ULONG DbgSEHValidationEnabled : 1;
+-            ULONG SpareBits : 25;
+-        };
+-    };
+-    ULONG DataFlagsPad[1];
+-    ULONGLONG TestRetInstruction;
+-    ULONG SystemCall;
+-    ULONG SystemCallReturn;
+-    ULONGLONG SystemCallPad[3];
+-    union
+-    {
+-        KSYSTEM_TIME TickCount;
+-        volatile unsigned __int64 TickCountQuad;
+-        ULONG ReservedTickCountOverlay[3];
+-    };
+-    ULONG TickCountPad[1];
+-    ULONG Cookie;
+-    ULONG CookiePad[1];
+-    LONGLONG ConsoleSessionForegroundProcessId;
+-    ULONG Wow64SharedInformation[16];
+-    USHORT UserModeGlobalLogger[16];
+-    ULONG ImageFileExecutionOptions;
+-    ULONG LangGenerationCount;
+-    ULONGLONG Reserved5;
+-    volatile unsigned __int64 InterruptTimeBias;
+-    volatile unsigned __int64 TscQpcBias;
+-    volatile unsigned long ActiveProcessorCount;
+-    volatile unsigned short ActiveGroupCount;
+-    USHORT Reserved4;
+-    volatile unsigned long AitSamplingValue;
+-    volatile unsigned long AppCompatFlag;
+-    ULONGLONG SystemDllNativeRelocation;
+-    ULONG SystemDllWowRelocation;
+-    ULONG XStatePad[1];
+-    XSTATE_CONFIGURATION XState;
+-} KUSER_SHARED_DATA;
+-
+-typedef struct _CM_PARTIAL_RESOURCE_LIST
+-{
+-    USHORT Version;
+-    USHORT Revision;
+-    ULONG Count;
+-    CM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptors[1];
+-} CM_PARTIAL_RESOURCE_LIST;
+-
+-typedef struct _RTL_USER_PROCESS_PARAMETERS
++typedef struct _RTL_USER_PROCESS_PARAMETERS
+ {
+     ULONG MaximumLength;
+     ULONG Length;
+@@ -3728,102 +3724,13 @@
+     volatile unsigned __int64 EnvironmentVersion;
+ } RTL_USER_PROCESS_PARAMETERS;
+ 
+-typedef struct _CONTEXT
+-{
+-    ULONGLONG P1Home;
+-    ULONGLONG P2Home;
+-    ULONGLONG P3Home;
+-    ULONGLONG P4Home;
+-    ULONGLONG P5Home;
+-    ULONGLONG P6Home;
+-    ULONG ContextFlags;
+-    ULONG MxCsr;
+-    USHORT SegCs;
+-    USHORT SegDs;
+-    USHORT SegEs;
+-    USHORT SegFs;
+-    USHORT SegGs;
+-    USHORT SegSs;
+-    ULONG EFlags;
+-    ULONGLONG Dr0;
+-    ULONGLONG Dr1;
+-    ULONGLONG Dr2;
+-    ULONGLONG Dr3;
+-    ULONGLONG Dr6;
+-    ULONGLONG Dr7;
+-    ULONGLONG Rax;
+-    ULONGLONG Rcx;
+-    ULONGLONG Rdx;
+-    ULONGLONG Rbx;
+-    ULONGLONG Rsp;
+-    ULONGLONG Rbp;
+-    ULONGLONG Rsi;
+-    ULONGLONG Rdi;
+-    ULONGLONG R8;
+-    ULONGLONG R9;
+-    ULONGLONG R10;
+-    ULONGLONG R11;
+-    ULONGLONG R12;
+-    ULONGLONG R13;
+-    ULONGLONG R14;
+-    ULONGLONG R15;
+-    ULONGLONG Rip;
+-    union
+-    {
+-        XSAVE_FORMAT FltSave;
+-        struct
+-        {
+-            M128A Header[2];
+-            M128A Legacy[8];
+-            M128A Xmm0;
+-            M128A Xmm1;
+-            M128A Xmm2;
+-            M128A Xmm3;
+-            M128A Xmm4;
+-            M128A Xmm5;
+-            M128A Xmm6;
+-            M128A Xmm7;
+-            M128A Xmm8;
+-            M128A Xmm9;
+-            M128A Xmm10;
+-            M128A Xmm11;
+-            M128A Xmm12;
+-            M128A Xmm13;
+-            M128A Xmm14;
+-            M128A Xmm15;
+-        };
+-    };
+-    M128A VectorRegister[26];
+-    ULONGLONG VectorControl;
+-    ULONGLONG DebugControl;
+-    ULONGLONG LastBranchToRip;
+-    ULONGLONG LastBranchFromRip;
+-    ULONGLONG LastExceptionToRip;
+-    ULONGLONG LastExceptionFromRip;
+-} CONTEXT, *PCONTEXT;
+-
+-typedef struct _TP_TASK_CALLBACKS TP_TASK_CALLBACKS;
+-typedef struct _TP_TASK TP_TASK;
+-
+-struct _TP_TASK_CALLBACKS
+-{
+-    VOID (*ExecuteCallback)(TP_CALLBACK_INSTANCE *, TP_TASK *);
+-    VOID (*Unposted)(TP_TASK *, TP_POOL *);
+-};
+-struct _TP_TASK
+-{
+-    TP_TASK_CALLBACKS *Callbacks;
+-    ULONG NumaNode;
+-    UCHAR IdealProcessor;
+-    TP_NBQ_GUARD PostGuard;
+-    VOID *NBQNode;
+-};
+-
+-typedef struct _KSEMAPHORE
++typedef struct _CM_PARTIAL_RESOURCE_LIST
+ {
+-    DISPATCHER_HEADER Header;
+-    LONG Limit;
+-} KSEMAPHORE, *PKSEMAPHORE;
++    USHORT Version;
++    USHORT Revision;
++    ULONG Count;
++    CM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptors[1];
++} CM_PARTIAL_RESOURCE_LIST;
+ 
+ typedef struct _WHEA_ERROR_RECORD_HEADER
+ {
+@@ -3845,12 +3752,11 @@
+     UCHAR Reserved[12];
+ } WHEA_ERROR_RECORD_HEADER;
+ 
+-typedef struct _RTL_DYNAMIC_HASH_TABLE_ENUMERATOR
++typedef struct _KSEMAPHORE
+ {
+-    RTL_DYNAMIC_HASH_TABLE_ENTRY HashEntry;
+-    LIST_ENTRY *ChainHead;
+-    ULONG BucketIndex;
+-} RTL_DYNAMIC_HASH_TABLE_ENUMERATOR;
++    DISPATCHER_HEADER Header;
++    LONG Limit;
++} KSEMAPHORE, *PKSEMAPHORE;
+ 
+ typedef struct _D3DKMDT_VIDPN_SOURCE_MODE
+ {
+@@ -3863,12 +3769,106 @@
+     } Format;
+ } D3DKMDT_VIDPN_SOURCE_MODE;
+ 
+-typedef struct _INITIAL_PRIVILEGE_SET
++typedef struct _PRIVILEGE_SET
+ {
+     ULONG PrivilegeCount;
+     ULONG Control;
+-    LUID_AND_ATTRIBUTES Privilege[3];
+-} INITIAL_PRIVILEGE_SET;
++    LUID_AND_ATTRIBUTES Privilege[1];
++} PRIVILEGE_SET;
++
++typedef struct _KUSER_SHARED_DATA
++{
++    ULONG TickCountLowDeprecated;
++    ULONG TickCountMultiplier;
++    KSYSTEM_TIME InterruptTime;
++    KSYSTEM_TIME SystemTime;
++    KSYSTEM_TIME TimeZoneBias;
++    USHORT ImageNumberLow;
++    USHORT ImageNumberHigh;
++    WCHAR NtSystemRoot[260];
++    ULONG MaxStackTraceDepth;
++    ULONG CryptoExponent;
++    ULONG TimeZoneId;
++    ULONG LargePageMinimum;
++    ULONG Reserved2[7];
++    NT_PRODUCT_TYPE NtProductType;
++    UCHAR ProductTypeIsValid;
++    ULONG NtMajorVersion;
++    ULONG NtMinorVersion;
++    UCHAR ProcessorFeatures[64];
++    ULONG Reserved1;
++    ULONG Reserved3;
++    volatile unsigned long TimeSlip;
++    ALTERNATIVE_ARCHITECTURE_TYPE AlternativeArchitecture;
++    ULONG AltArchitecturePad[1];
++    LARGE_INTEGER SystemExpirationDate;
++    ULONG SuiteMask;
++    UCHAR KdDebuggerEnabled;
++    UCHAR NXSupportPolicy;
++    volatile unsigned long ActiveConsoleId;
++    volatile unsigned long DismountCount;
++    ULONG ComPlusPackage;
++    ULONG LastSystemRITEventTickCount;
++    ULONG NumberOfPhysicalPages;
++    UCHAR SafeBootMode;
++    union
++    {
++        UCHAR TscQpcData;
++        struct
++        {
++            UCHAR TscQpcEnabled : 1;
++            UCHAR TscQpcSpareFlag : 1;
++            UCHAR TscQpcShift : 6;
++        };
++    };
++    UCHAR TscQpcPad[2];
++    union
++    {
++        ULONG SharedDataFlags;
++        struct
++        {
++            ULONG DbgErrorPortPresent : 1;
++            ULONG DbgElevationEnabled : 1;
++            ULONG DbgVirtEnabled : 1;
++            ULONG DbgInstallerDetectEnabled : 1;
++            ULONG DbgSystemDllRelocated : 1;
++            ULONG DbgDynProcessorEnabled : 1;
++            ULONG DbgSEHValidationEnabled : 1;
++            ULONG SpareBits : 25;
++        };
++    };
++    ULONG DataFlagsPad[1];
++    ULONGLONG TestRetInstruction;
++    ULONG SystemCall;
++    ULONG SystemCallReturn;
++    ULONGLONG SystemCallPad[3];
++    union
++    {
++        KSYSTEM_TIME TickCount;
++        volatile unsigned __int64 TickCountQuad;
++        ULONG ReservedTickCountOverlay[3];
++    };
++    ULONG TickCountPad[1];
++    ULONG Cookie;
++    ULONG CookiePad[1];
++    LONGLONG ConsoleSessionForegroundProcessId;
++    ULONG Wow64SharedInformation[16];
++    USHORT UserModeGlobalLogger[16];
++    ULONG ImageFileExecutionOptions;
++    ULONG LangGenerationCount;
++    ULONGLONG Reserved5;
++    volatile unsigned __int64 InterruptTimeBias;
++    volatile unsigned __int64 TscQpcBias;
++    volatile unsigned long ActiveProcessorCount;
++    volatile unsigned short ActiveGroupCount;
++    USHORT Reserved4;
++    volatile unsigned long AitSamplingValue;
++    volatile unsigned long AppCompatFlag;
++    ULONGLONG SystemDllNativeRelocation;
++    ULONG SystemDllWowRelocation;
++    ULONG XStatePad[1];
++    XSTATE_CONFIGURATION XState;
++} KUSER_SHARED_DATA;
+ 
+ typedef struct _D3DKMDT_MONITOR_SOURCE_MODE
+ {
+@@ -3888,6 +3888,56 @@
+     IO_RESOURCE_DESCRIPTOR Descriptors[1];
+ } IO_RESOURCE_LIST;
+ 
++typedef struct _KBDFILE KBDFILE, *PKBDFILE;
++
++struct _KBDFILE
++{
++    HEAD head;
++    PKBDFILE pkfNext;
++    VOID *hBase;
++    KbdLayer *pKbdTbl;
++    ULONG Size;
++    KbdNlsLayer *pKbdNlsTbl;
++    WCHAR awchDllName[32];
++};
++
++typedef struct _D3DKMDT_VIDPN_PRESENT_PATH
++{
++    UINT VidPnSourceId;
++    UINT VidPnTargetId;
++    D3DKMDT_VIDPN_PRESENT_PATH_IMPORTANCE ImportanceOrdinal;
++    D3DKMDT_VIDPN_PRESENT_PATH_TRANSFORMATION ContentTransformation;
++    D3DKMDT_2DREGION VisibleFromActiveTLOffset;
++    D3DKMDT_2DREGION VisibleFromActiveBROffset;
++    D3DKMDT_COLOR_BASIS VidPnTargetColorBasis;
++    D3DKMDT_COLOR_COEFF_DYNAMIC_RANGES VidPnTargetColorCoeffDynamicRanges;
++    D3DKMDT_VIDPN_PRESENT_PATH_CONTENT Content;
++    D3DKMDT_VIDPN_PRESENT_PATH_COPYPROTECTION CopyProtection;
++    D3DKMDT_GAMMA_RAMP GammaRamp;
++} D3DKMDT_VIDPN_PRESENT_PATH;
++
++typedef struct _ERESOURCE
++{
++    LIST_ENTRY SystemResourcesList;
++    OWNER_ENTRY *OwnerTable;
++    SHORT ActiveCount;
++    USHORT Flag;
++    PKSEMAPHORE SharedWaiters;
++    PKEVENT ExclusiveWaiters;
++    OWNER_ENTRY OwnerEntry;
++    ULONG ActiveEntries;
++    ULONG ContentionCount;
++    ULONG NumberOfSharedWaiters;
++    ULONG NumberOfExclusiveWaiters;
++    VOID *Reserved2;
++    union
++    {
++        VOID *Address;
++        ULONGLONG CreatorBackTraceIndex;
++    };
++    ULONGLONG SpinLock;
++} ERESOURCE, *PERESOURCE;
++
+ typedef struct _W32PROCESS W32PROCESS, *PW32PROCESS;
+ 
+ struct _W32PROCESS
+@@ -3914,81 +3964,35 @@
+     VOID *DxProcess;
+ };
+ 
+-typedef struct _PAGED_LOOKASIDE_LIST
+-{
+-    GENERAL_LOOKASIDE L;
+-} PAGED_LOOKASIDE_LIST;
+-
+-typedef struct _CM_FULL_RESOURCE_DESCRIPTOR
+-{
+-    INTERFACE_TYPE InterfaceType;
+-    ULONG BusNumber;
+-    CM_PARTIAL_RESOURCE_LIST PartialResourceList;
+-} CM_FULL_RESOURCE_DESCRIPTOR;
+-
+-typedef struct _ERESOURCE
++typedef struct _ACCESS_STATE
+ {
+-    LIST_ENTRY SystemResourcesList;
+-    OWNER_ENTRY *OwnerTable;
+-    SHORT ActiveCount;
+-    USHORT Flag;
+-    PKSEMAPHORE SharedWaiters;
+-    PKEVENT ExclusiveWaiters;
+-    OWNER_ENTRY OwnerEntry;
+-    ULONG ActiveEntries;
+-    ULONG ContentionCount;
+-    ULONG NumberOfSharedWaiters;
+-    ULONG NumberOfExclusiveWaiters;
+-    VOID *Reserved2;
++    LUID OperationID;
++    UCHAR SecurityEvaluated;
++    UCHAR GenerateAudit;
++    UCHAR GenerateOnClose;
++    UCHAR PrivilegesAllocated;
++    ULONG Flags;
++    ULONG RemainingDesiredAccess;
++    ULONG PreviouslyGrantedAccess;
++    ULONG OriginalDesiredAccess;
++    SECURITY_SUBJECT_CONTEXT SubjectSecurityContext;
++    VOID *SecurityDescriptor;
++    VOID *AuxData;
+     union
+     {
+-        VOID *Address;
+-        ULONGLONG CreatorBackTraceIndex;
+-    };
+-    ULONGLONG SpinLock;
+-} ERESOURCE, *PERESOURCE;
+-
+-typedef struct _AUX_ACCESS_DATA
+-{
+-    PRIVILEGE_SET *PrivilegesUsed;
+-    GENERIC_MAPPING GenericMapping;
+-    ULONG AccessesToAudit;
+-    ULONG MaximumAuditMask;
+-    GUID TransactionId;
+-    VOID *NewSecurityDescriptor;
+-    VOID *ExistingSecurityDescriptor;
+-    VOID *ParentSecurityDescriptor;
+-    VOID (*DeRefSecurityDescriptor)(VOID *, VOID *);
+-    VOID *SDLock;
+-    ACCESS_REASONS AccessReasons;
+-} AUX_ACCESS_DATA;
+-
+-typedef struct _DMM_VIDPNTARGETMODESET_SERIALIZATION
+-{
+-    UCHAR NumModes;
+-    D3DKMDT_VIDPN_TARGET_MODE ModeSerialization[1];
+-} DMM_VIDPNTARGETMODESET_SERIALIZATION;
+-
+-typedef struct _FAST_MUTEX
+-{
+-    volatile long Count;
+-    KTHREAD *Owner;
+-    ULONG Contention;
+-    KEVENT Event;
+-    ULONG OldIrql;
+-} FAST_MUTEX;
+-
+-typedef struct _WOWTHREADINFO WOWTHREADINFO, *PWOWTHREADINFO;
++        INITIAL_PRIVILEGE_SET InitialPrivilegeSet;
++        PRIVILEGE_SET PrivilegeSet;
++    } Privileges;
++    UCHAR AuditPrivileges;
++    UNICODE_STRING ObjectName;
++    UNICODE_STRING ObjectTypeName;
++} ACCESS_STATE;
+ 
+-struct _WOWTHREADINFO
++typedef struct _KPROCESSOR_STATE
+ {
+-    PWOWTHREADINFO pwtiNext;
+-    ULONG idTask;
+-    ULONGLONG idWaitObject;
+-    ULONG idParentProcess;
+-    PKEVENT pIdleEvent;
+-    INT fAssigned;
+-};
++    KSPECIAL_REGISTERS SpecialRegisters;
++    CONTEXT ContextFrame;
++} KPROCESSOR_STATE;
+ 
+ typedef struct _PEB
+ {
+@@ -4106,25 +4110,10 @@
+     };
+ } PEB, *PPEB;
+ 
+-typedef struct _D3DKMDT_VIDPN_PRESENT_PATH
+-{
+-    UINT VidPnSourceId;
+-    UINT VidPnTargetId;
+-    D3DKMDT_VIDPN_PRESENT_PATH_IMPORTANCE ImportanceOrdinal;
+-    D3DKMDT_VIDPN_PRESENT_PATH_TRANSFORMATION ContentTransformation;
+-    D3DKMDT_2DREGION VisibleFromActiveTLOffset;
+-    D3DKMDT_2DREGION VisibleFromActiveBROffset;
+-    D3DKMDT_COLOR_BASIS VidPnTargetColorBasis;
+-    D3DKMDT_COLOR_COEFF_DYNAMIC_RANGES VidPnTargetColorCoeffDynamicRanges;
+-    D3DKMDT_VIDPN_PRESENT_PATH_CONTENT Content;
+-    D3DKMDT_VIDPN_PRESENT_PATH_COPYPROTECTION CopyProtection;
+-    D3DKMDT_GAMMA_RAMP GammaRamp;
+-} D3DKMDT_VIDPN_PRESENT_PATH;
+-
+-typedef struct _NPAGED_LOOKASIDE_LIST
++typedef struct _PAGED_LOOKASIDE_LIST
+ {
+     GENERAL_LOOKASIDE L;
+-} NPAGED_LOOKASIDE_LIST;
++} PAGED_LOOKASIDE_LIST;
+ 
+ typedef struct _DMM_MONITOR_SOURCE_MODE_SERIALIZATION
+ {
+@@ -4132,53 +4121,64 @@
+     D3DKMDT_MONITOR_TIMING_TYPE TimingType;
+ } DMM_MONITOR_SOURCE_MODE_SERIALIZATION;
+ 
+-typedef struct _DMM_MONITORFREQUENCYRANGESET_SERIALIZATION
++typedef struct _DMM_VIDPNTARGETMODESET_SERIALIZATION
+ {
+-    UCHAR NumFrequencyRanges;
+-    D3DKMDT_MONITOR_FREQUENCY_RANGE FrequencyRangeSerialization[1];
+-} DMM_MONITORFREQUENCYRANGESET_SERIALIZATION;
++    UCHAR NumModes;
++    D3DKMDT_VIDPN_TARGET_MODE ModeSerialization[1];
++} DMM_VIDPNTARGETMODESET_SERIALIZATION;
+ 
+-typedef struct _ACCESS_STATE
++typedef struct _FAST_MUTEX
+ {
+-    LUID OperationID;
+-    UCHAR SecurityEvaluated;
+-    UCHAR GenerateAudit;
+-    UCHAR GenerateOnClose;
+-    UCHAR PrivilegesAllocated;
+-    ULONG Flags;
+-    ULONG RemainingDesiredAccess;
+-    ULONG PreviouslyGrantedAccess;
+-    ULONG OriginalDesiredAccess;
+-    SECURITY_SUBJECT_CONTEXT SubjectSecurityContext;
+-    VOID *SecurityDescriptor;
+-    VOID *AuxData;
+-    union
+-    {
+-        INITIAL_PRIVILEGE_SET InitialPrivilegeSet;
+-        PRIVILEGE_SET PrivilegeSet;
+-    } Privileges;
+-    UCHAR AuditPrivileges;
+-    UNICODE_STRING ObjectName;
+-    UNICODE_STRING ObjectTypeName;
+-} ACCESS_STATE;
++    volatile long Count;
++    KTHREAD *Owner;
++    ULONG Contention;
++    KEVENT Event;
++    ULONG OldIrql;
++} FAST_MUTEX;
+ 
+-typedef struct _KPROCESSOR_STATE
++typedef struct _NPAGED_LOOKASIDE_LIST
+ {
+-    KSPECIAL_REGISTERS SpecialRegisters;
+-    CONTEXT ContextFrame;
+-} KPROCESSOR_STATE;
++    GENERAL_LOOKASIDE L;
++} NPAGED_LOOKASIDE_LIST;
+ 
+-typedef struct _KBDFILE KBDFILE, *PKBDFILE;
++typedef struct _CM_FULL_RESOURCE_DESCRIPTOR
++{
++    INTERFACE_TYPE InterfaceType;
++    ULONG BusNumber;
++    CM_PARTIAL_RESOURCE_LIST PartialResourceList;
++} CM_FULL_RESOURCE_DESCRIPTOR;
+ 
+-struct _KBDFILE
++typedef struct _AUX_ACCESS_DATA
+ {
+-    HEAD head;
+-    PKBDFILE pkfNext;
+-    VOID *hBase;
+-    KbdLayer *pKbdTbl;
+-    ULONG Size;
+-    KbdNlsLayer *pKbdNlsTbl;
+-    WCHAR awchDllName[32];
++    PRIVILEGE_SET *PrivilegesUsed;
++    GENERIC_MAPPING GenericMapping;
++    ULONG AccessesToAudit;
++    ULONG MaximumAuditMask;
++    GUID TransactionId;
++    VOID *NewSecurityDescriptor;
++    VOID *ExistingSecurityDescriptor;
++    VOID *ParentSecurityDescriptor;
++    VOID (*DeRefSecurityDescriptor)(VOID *, VOID *);
++    VOID *SDLock;
++    ACCESS_REASONS AccessReasons;
++} AUX_ACCESS_DATA;
++
++typedef struct _DMM_MONITORFREQUENCYRANGESET_SERIALIZATION
++{
++    UCHAR NumFrequencyRanges;
++    D3DKMDT_MONITOR_FREQUENCY_RANGE FrequencyRangeSerialization[1];
++} DMM_MONITORFREQUENCYRANGESET_SERIALIZATION;
++
++typedef struct _WOWTHREADINFO WOWTHREADINFO, *PWOWTHREADINFO;
++
++struct _WOWTHREADINFO
++{
++    PWOWTHREADINFO pwtiNext;
++    ULONG idTask;
++    ULONGLONG idWaitObject;
++    ULONG idParentProcess;
++    PKEVENT pIdleEvent;
++    INT fAssigned;
+ };
+ 
+ typedef struct _EXCEPTION_REGISTRATION_RECORD EXCEPTION_REGISTRATION_RECORD;
+@@ -4206,66 +4206,34 @@
+     IO_RESOURCE_LIST List[1];
+ } IO_RESOURCE_REQUIREMENTS_LIST;
+ 
+-typedef struct _DMM_VIDPNPATHANDTARGETMODESET_SERIALIZATION
+-{
+-    D3DKMDT_VIDPN_PRESENT_PATH PathInfo;
+-    DMM_VIDPNTARGETMODESET_SERIALIZATION TargetModeSet;
+-} DMM_VIDPNPATHANDTARGETMODESET_SERIALIZATION;
++typedef struct _KL KL, *PKL;
+ 
+-typedef struct _OBJECT_TYPE_INITIALIZER
++struct _KL
+ {
+-    USHORT Length;
+-    union
+-    {
+-        UCHAR ObjectTypeFlags;
+-        struct
+-        {
+-            UCHAR CaseInsensitive : 1;
+-            UCHAR UnnamedObjectsOnly : 1;
+-            UCHAR UseDefaultObject : 1;
+-            UCHAR SecurityRequired : 1;
+-            UCHAR MaintainHandleCount : 1;
+-            UCHAR MaintainTypeList : 1;
+-            UCHAR SupportsObjectCallbacks : 1;
+-        };
+-    };
+-    ULONG ObjectTypeCode;
+-    ULONG InvalidAttributes;
+-    GENERIC_MAPPING GenericMapping;
+-    ULONG ValidAccessMask;
+-    ULONG RetainAccess;
+-    POOL_TYPE PoolType;
+-    ULONG DefaultPagedPoolCharge;
+-    ULONG DefaultNonPagedPoolCharge;
+-    VOID (*DumpProcedure)(VOID *, OBJECT_DUMP_CONTROL *);
+-    LONG (*OpenProcedure)(OB_OPEN_REASON, CHAR, EPROCESS *, VOID *, ULONG *, ULONG);
+-    VOID (*CloseProcedure)(EPROCESS *, VOID *, ULONGLONG, ULONGLONG);
+-    VOID (*DeleteProcedure)(VOID *);
+-    LONG (*ParseProcedure)(VOID *, VOID *, ACCESS_STATE *, CHAR, ULONG, UNICODE_STRING *, UNICODE_STRING *, VOID *, SECURITY_QUALITY_OF_SERVICE *, VOID **);
+-    LONG (*SecurityProcedure)(VOID *, SECURITY_OPERATION_CODE, ULONG *, VOID *, ULONG *, VOID **, POOL_TYPE, GENERIC_MAPPING *, CHAR);
+-    LONG (*QueryNameProcedure)(VOID *, UCHAR, OBJECT_NAME_INFORMATION *, ULONG, ULONG *, CHAR);
+-    UCHAR (*OkayToCloseProcedure)(EPROCESS *, VOID *, VOID *, CHAR);
+-} OBJECT_TYPE_INITIALIZER;
++    HEAD head;
++    PKL pklNext;
++    PKL pklPrev;
++    ULONG dwKL_Flags;
++    HKL__ *hkl;
++    PKBDFILE spkf;
++    PKBDFILE spkfPrimary;
++    ULONG dwFontSigs;
++    UINT iBaseCharset;
++    USHORT CodePage;
++    WCHAR wchDiacritic;
++    PIMEINFOEX piiex;
++    UINT uNumTbl;
++    PKBDFILE *pspkfExtra;
++    ULONG dwLastKbdType;
++    ULONG dwLastKbdSubType;
++    ULONG dwKLID;
++};
+ 
+-typedef struct _DMM_VIDPNPATHANDTARGETMODE_SERIALIZATION
++typedef struct _DMM_VIDPNPATHANDTARGETMODESET_SERIALIZATION
+ {
+     D3DKMDT_VIDPN_PRESENT_PATH PathInfo;
+-    D3DKMDT_VIDPN_TARGET_MODE TargetMode;
+-} DMM_VIDPNPATHANDTARGETMODE_SERIALIZATION;
+-
+-typedef struct _CM_RESOURCE_LIST
+-{
+-    ULONG Count;
+-    CM_FULL_RESOURCE_DESCRIPTOR List[1];
+-} CM_RESOURCE_LIST;
+-
+-typedef struct _IO_SECURITY_CONTEXT
+-{
+-    SECURITY_QUALITY_OF_SERVICE *SecurityQos;
+-    ACCESS_STATE *AccessState;
+-    ULONG DesiredAccess;
+-    ULONG FullCreateOptions;
+-} IO_SECURITY_CONTEXT;
++    DMM_VIDPNTARGETMODESET_SERIALIZATION TargetModeSet;
++} DMM_VIDPNPATHANDTARGETMODESET_SERIALIZATION;
+ 
+ typedef struct _KPRCB
+ {
+@@ -4313,28 +4281,54 @@
+     UCHAR GroupIndex;
+ } KPRCB, *PKPRCB;
+ 
+-typedef struct _KL KL, *PKL;
++typedef struct _CM_RESOURCE_LIST
++{
++    ULONG Count;
++    CM_FULL_RESOURCE_DESCRIPTOR List[1];
++} CM_RESOURCE_LIST;
+ 
+-struct _KL
++typedef struct _OBJECT_TYPE_INITIALIZER
+ {
+-    HEAD head;
+-    PKL pklNext;
+-    PKL pklPrev;
+-    ULONG dwKL_Flags;
+-    HKL__ *hkl;
+-    PKBDFILE spkf;
+-    PKBDFILE spkfPrimary;
+-    ULONG dwFontSigs;
+-    UINT iBaseCharset;
+-    USHORT CodePage;
+-    WCHAR wchDiacritic;
+-    PIMEINFOEX piiex;
+-    UINT uNumTbl;
+-    PKBDFILE *pspkfExtra;
+-    ULONG dwLastKbdType;
+-    ULONG dwLastKbdSubType;
+-    ULONG dwKLID;
+-};
++    USHORT Length;
++    union
++    {
++        UCHAR ObjectTypeFlags;
++        struct
++        {
++            UCHAR CaseInsensitive : 1;
++            UCHAR UnnamedObjectsOnly : 1;
++            UCHAR UseDefaultObject : 1;
++            UCHAR SecurityRequired : 1;
++            UCHAR MaintainHandleCount : 1;
++            UCHAR MaintainTypeList : 1;
++            UCHAR SupportsObjectCallbacks : 1;
++        };
++    };
++    ULONG ObjectTypeCode;
++    ULONG InvalidAttributes;
++    GENERIC_MAPPING GenericMapping;
++    ULONG ValidAccessMask;
++    ULONG RetainAccess;
++    POOL_TYPE PoolType;
++    ULONG DefaultPagedPoolCharge;
++    ULONG DefaultNonPagedPoolCharge;
++    VOID (*DumpProcedure)(VOID *, OBJECT_DUMP_CONTROL *);
++    LONG (*OpenProcedure)(OB_OPEN_REASON, CHAR, EPROCESS *, VOID *, ULONG *, ULONG);
++    VOID (*CloseProcedure)(EPROCESS *, VOID *, ULONGLONG, ULONGLONG);
++    VOID (*DeleteProcedure)(VOID *);
++    LONG (*ParseProcedure)(VOID *, VOID *, ACCESS_STATE *, CHAR, ULONG, UNICODE_STRING *, UNICODE_STRING *, VOID *, SECURITY_QUALITY_OF_SERVICE *, VOID **);
++    LONG (*SecurityProcedure)(VOID *, SECURITY_OPERATION_CODE, ULONG *, VOID *, ULONG *, VOID **, POOL_TYPE, GENERIC_MAPPING *, CHAR);
++    LONG (*QueryNameProcedure)(VOID *, UCHAR, OBJECT_NAME_INFORMATION *, ULONG, ULONG *, CHAR);
++    UCHAR (*OkayToCloseProcedure)(EPROCESS *, VOID *, VOID *, CHAR);
++} OBJECT_TYPE_INITIALIZER;
++
++typedef struct _IO_SECURITY_CONTEXT
++{
++    SECURITY_QUALITY_OF_SERVICE *SecurityQos;
++    ACCESS_STATE *AccessState;
++    ULONG DesiredAccess;
++    ULONG FullCreateOptions;
++} IO_SECURITY_CONTEXT;
+ 
+ typedef struct _DMM_MONITORSOURCEMODESET_SERIALIZATION
+ {
+@@ -4359,44 +4353,11 @@
+     NT_TIB *Self;
+ };
+ 
+-typedef struct _KPCR KPCR, *PKPCR;
+-
+-struct _KPCR
++typedef struct _DMM_VIDPNPATHANDTARGETMODE_SERIALIZATION
+ {
+-    union
+-    {
+-        NT_TIB NtTib;
+-        struct
+-        {
+-            PKGDTENTRY64 GdtBase;
+-            PKTSS64 TssBase;
+-            ULONGLONG UserRsp;
+-            PKPCR Self;
+-            PKPRCB CurrentPrcb;
+-            KSPIN_LOCK_QUEUE *LockArray;
+-            VOID *Used_Self;
+-        };
+-    };
+-    PKIDTENTRY64 IdtBase;
+-    ULONGLONG Unused[2];
+-    UCHAR Irql;
+-    UCHAR SecondLevelCacheAssociativity;
+-    UCHAR ObsoleteNumber;
+-    UCHAR Fill0;
+-    ULONG Unused0[3];
+-    USHORT MajorVersion;
+-    USHORT MinorVersion;
+-    ULONG StallScaleFactor;
+-    VOID *Unused1[3];
+-    ULONG KernelReserved[15];
+-    ULONG SecondLevelCacheSize;
+-    ULONG HalReserved[16];
+-    ULONG Unused2;
+-    VOID *KdVersionBlock;
+-    VOID *Unused3;
+-    ULONG PcrAlign1[24];
+-    KPRCB Prcb;
+-};
++    D3DKMDT_VIDPN_PRESENT_PATH PathInfo;
++    D3DKMDT_VIDPN_TARGET_MODE TargetMode;
++} DMM_VIDPNPATHANDTARGETMODE_SERIALIZATION;
+ 
+ typedef struct _IO_STACK_LOCATION IO_STACK_LOCATION;
+ typedef struct _DEVOBJ_EXTENSION DEVOBJ_EXTENSION;
+@@ -6057,6 +6018,22 @@
+     DMM_VIDPNPATHANDTARGETMODE_SERIALIZATION PathAndTargetModeSerialization[1];
+ } DMM_VIDPNPATHSFROMSOURCE_SERIALIZATION;
+ 
++typedef struct _OBJECT_TYPE
++{
++    LIST_ENTRY TypeList;
++    UNICODE_STRING Name;
++    VOID *DefaultObject;
++    UCHAR Index;
++    ULONG TotalNumberOfObjects;
++    ULONG TotalNumberOfHandles;
++    ULONG HighWaterNumberOfObjects;
++    ULONG HighWaterNumberOfHandles;
++    OBJECT_TYPE_INITIALIZER TypeInfo;
++    EX_PUSH_LOCK TypeLock;
++    ULONG Key;
++    LIST_ENTRY CallbackList;
++} OBJECT_TYPE;
++
+ typedef struct _TEB
+ {
+     NT_TIB NtTib;
+@@ -6177,21 +6154,44 @@
+     VOID *ResourceRetValue;
+ } TEB, *PTEB;
+ 
+-typedef struct _OBJECT_TYPE
++typedef struct _KPCR KPCR, *PKPCR;
++
++struct _KPCR
+ {
+-    LIST_ENTRY TypeList;
+-    UNICODE_STRING Name;
+-    VOID *DefaultObject;
+-    UCHAR Index;
+-    ULONG TotalNumberOfObjects;
+-    ULONG TotalNumberOfHandles;
+-    ULONG HighWaterNumberOfObjects;
+-    ULONG HighWaterNumberOfHandles;
+-    OBJECT_TYPE_INITIALIZER TypeInfo;
+-    EX_PUSH_LOCK TypeLock;
+-    ULONG Key;
+-    LIST_ENTRY CallbackList;
+-} OBJECT_TYPE;
++    union
++    {
++        NT_TIB NtTib;
++        struct
++        {
++            PKGDTENTRY64 GdtBase;
++            PKTSS64 TssBase;
++            ULONGLONG UserRsp;
++            PKPCR Self;
++            PKPRCB CurrentPrcb;
++            KSPIN_LOCK_QUEUE *LockArray;
++            VOID *Used_Self;
++        };
++    };
++    PKIDTENTRY64 IdtBase;
++    ULONGLONG Unused[2];
++    UCHAR Irql;
++    UCHAR SecondLevelCacheAssociativity;
++    UCHAR ObsoleteNumber;
++    UCHAR Fill0;
++    ULONG Unused0[3];
++    USHORT MajorVersion;
++    USHORT MinorVersion;
++    ULONG StallScaleFactor;
++    VOID *Unused1[3];
++    ULONG KernelReserved[15];
++    ULONG SecondLevelCacheSize;
++    ULONG HalReserved[16];
++    ULONG Unused2;
++    VOID *KdVersionBlock;
++    VOID *Unused3;
++    ULONG PcrAlign1[24];
++    KPRCB Prcb;
++};
+ 
+ typedef struct _TOUCHINPUTINFO
+ {
+@@ -6201,35 +6201,6 @@
+     TOUCHINPUT TouchInput[1];
+ } TOUCHINPUTINFO, *PTOUCHINPUTINFO;
+ 
+-typedef struct _DMA_OPERATIONS DMA_OPERATIONS;
+-typedef struct _DMA_ADAPTER DMA_ADAPTER;
+-
+-struct _DMA_OPERATIONS
+-{
+-    ULONG Size;
+-    VOID (*PutDmaAdapter)(DMA_ADAPTER *);
+-    VOID *(*AllocateCommonBuffer)(DMA_ADAPTER *, ULONG, LARGE_INTEGER *, UCHAR);
+-    VOID (*FreeCommonBuffer)(DMA_ADAPTER *, ULONG, LARGE_INTEGER, VOID *, UCHAR);
+-    LONG (*AllocateAdapterChannel)(DMA_ADAPTER *, DEVICE_OBJECT *, ULONG, IO_ALLOCATION_ACTION (*)(DEVICE_OBJECT *, PIRP, VOID *, VOID *), VOID *);
+-    UCHAR (*FlushAdapterBuffers)(DMA_ADAPTER *, PMDL, VOID *, VOID *, ULONG, UCHAR);
+-    VOID (*FreeAdapterChannel)(DMA_ADAPTER *);
+-    VOID (*FreeMapRegisters)(DMA_ADAPTER *, VOID *, ULONG);
+-    LARGE_INTEGER (*MapTransfer)(DMA_ADAPTER *, PMDL, VOID *, VOID *, ULONG *, UCHAR);
+-    ULONG (*GetDmaAlignment)(DMA_ADAPTER *);
+-    ULONG (*ReadDmaCounter)(DMA_ADAPTER *);
+-    LONG (*GetScatterGatherList)(DMA_ADAPTER *, DEVICE_OBJECT *, PMDL, VOID *, ULONG, VOID (*)(DEVICE_OBJECT *, PIRP, SCATTER_GATHER_LIST *, VOID *), VOID *, UCHAR);
+-    VOID (*PutScatterGatherList)(DMA_ADAPTER *, SCATTER_GATHER_LIST *, UCHAR);
+-    LONG (*CalculateScatterGatherList)(DMA_ADAPTER *, PMDL, VOID *, ULONG, ULONG *, ULONG *);
+-    LONG (*BuildScatterGatherList)(DMA_ADAPTER *, DEVICE_OBJECT *, PMDL, VOID *, ULONG, VOID (*)(DEVICE_OBJECT *, PIRP, SCATTER_GATHER_LIST *, VOID *), VOID *, UCHAR, VOID *, ULONG);
+-    LONG (*BuildMdlFromScatterGatherList)(DMA_ADAPTER *, SCATTER_GATHER_LIST *, PMDL, PMDL *);
+-};
+-struct _DMA_ADAPTER
+-{
+-    USHORT Version;
+-    USHORT Size;
+-    DMA_OPERATIONS *DmaOperations;
+-};
+-
+ typedef struct _SERVERINFO
+ {
+     ULONG dwSRVIFlags;
+@@ -6293,6 +6264,35 @@
+     ULONG dwRIPFlags;
+ } SERVERINFO, *PSERVERINFO;
+ 
++typedef struct _DMA_OPERATIONS DMA_OPERATIONS;
++typedef struct _DMA_ADAPTER DMA_ADAPTER;
++
++struct _DMA_OPERATIONS
++{
++    ULONG Size;
++    VOID (*PutDmaAdapter)(DMA_ADAPTER *);
++    VOID *(*AllocateCommonBuffer)(DMA_ADAPTER *, ULONG, LARGE_INTEGER *, UCHAR);
++    VOID (*FreeCommonBuffer)(DMA_ADAPTER *, ULONG, LARGE_INTEGER, VOID *, UCHAR);
++    LONG (*AllocateAdapterChannel)(DMA_ADAPTER *, DEVICE_OBJECT *, ULONG, IO_ALLOCATION_ACTION (*)(DEVICE_OBJECT *, PIRP, VOID *, VOID *), VOID *);
++    UCHAR (*FlushAdapterBuffers)(DMA_ADAPTER *, PMDL, VOID *, VOID *, ULONG, UCHAR);
++    VOID (*FreeAdapterChannel)(DMA_ADAPTER *);
++    VOID (*FreeMapRegisters)(DMA_ADAPTER *, VOID *, ULONG);
++    LARGE_INTEGER (*MapTransfer)(DMA_ADAPTER *, PMDL, VOID *, VOID *, ULONG *, UCHAR);
++    ULONG (*GetDmaAlignment)(DMA_ADAPTER *);
++    ULONG (*ReadDmaCounter)(DMA_ADAPTER *);
++    LONG (*GetScatterGatherList)(DMA_ADAPTER *, DEVICE_OBJECT *, PMDL, VOID *, ULONG, VOID (*)(DEVICE_OBJECT *, PIRP, SCATTER_GATHER_LIST *, VOID *), VOID *, UCHAR);
++    VOID (*PutScatterGatherList)(DMA_ADAPTER *, SCATTER_GATHER_LIST *, UCHAR);
++    LONG (*CalculateScatterGatherList)(DMA_ADAPTER *, PMDL, VOID *, ULONG, ULONG *, ULONG *);
++    LONG (*BuildScatterGatherList)(DMA_ADAPTER *, DEVICE_OBJECT *, PMDL, VOID *, ULONG, VOID (*)(DEVICE_OBJECT *, PIRP, SCATTER_GATHER_LIST *, VOID *), VOID *, UCHAR, VOID *, ULONG);
++    LONG (*BuildMdlFromScatterGatherList)(DMA_ADAPTER *, SCATTER_GATHER_LIST *, PMDL, PMDL *);
++};
++struct _DMA_ADAPTER
++{
++    USHORT Version;
++    USHORT Size;
++    DMA_OPERATIONS *DmaOperations;
++};
++
+ typedef struct _SHAREDINFO
+ {
+     PSERVERINFO psi;
