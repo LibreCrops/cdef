@@ -116,6 +116,8 @@ namespace PdbReader
                 }
                 else
                 {
+                    Console.WriteLine(ex.Message);
+                    Environment.Exit(1);
                     throw new PdbNotFoundException();
                 }
             }
