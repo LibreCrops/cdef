@@ -1,6 +1,9 @@
 # cdef (formerly entitled PdbReader)
 
 
+[![Build status](https://ci.appveyor.com/api/projects/status/h8sq2e4j3iysr2k1?svg=true)](https://ci.appveyor.com/project/NoviceLive/cdef)
+
+
 Recover C language structures from [Microsoft PDB] files.
 
 Help us test this app!
