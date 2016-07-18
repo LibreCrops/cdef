@@ -11,7 +11,7 @@ Help us test this app!
 
 ## What it is
 
-[PdbReader] is a software / software library
+[cdef] is a software / software library
 that recovers structure definitions,
 which are of help in some low-level programming,
 from [Microsoft PDB] files with resort to [DIA].
@@ -32,11 +32,11 @@ it is most likely that you also have [DIA] installed.
 
 See http://librecrops.github.io/lost-sdk/.
 
-But that's merely a demonstration of [PdbReader].
+But that's merely a demonstration of [cdef].
 
 For further development upon structures
 or any other customized requirements,
-you'd better use [PdbReader] directly.
+you'd better use [cdef] directly.
 
 
 ### Some Comparison
@@ -53,7 +53,7 @@ The first structure of [NT_TIB](https://en.wikipedia.org/wiki/Win32_Thread_Infor
 
 ![](Images/moonsols-1.png)
 
-[From PdbReader](http://hoocs.github.io/lost-sdk/files/EXCEPTION_REGISTRATION_RECORD.h.html).
+[From cdef](http://librecrops.github.io/lost-sdk/files/EXCEPTION_REGISTRATION_RECORD.h.html).
 
 ![](Images/pdbreader-1.png)
 
@@ -85,7 +85,7 @@ in the [Scheme] programming language.
 
 ### Producers & Consumers
 
-PdbReader understands that [DIA] can't be made
+[cdef] understands that [DIA] can't be made
 cross-platform with ease, and therefore it will produce
 an intermediate representation of structures using [XML].
 
@@ -98,7 +98,7 @@ but it is of help when you want to write your own consumer.
 Detailed specification of the representation may be added later.
 
 
-[PdbReader]: https://github.com/kbridge/PdbReader
+[cdef]: https://github.com/LibreCrops/cdef
 [Scheme]: https://en.wikipedia.org/wiki/Scheme_(programming_language)
 [Microsoft PDB]: https://github.com/Microsoft/microsoft-pdb
 [DIA]: https://msdn.microsoft.com/en-us/library/x93ctkx8.aspx
