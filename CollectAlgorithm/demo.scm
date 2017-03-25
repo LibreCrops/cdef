@@ -46,7 +46,18 @@
           (mb 12 "f")
           (mb 4 "g")
           (mb 8 "h")
-          (mb 16 "i")))
+          (mb 16 "i")
+	  ;;
+	  (mb 20 "j")
+          (mb 24 "k")
+          (mb 24 "l")
+          (mb 28 "m")
+          (mb 28 "n")
+          (mb 32 "o")
+          (mb 24 "p")
+          (mb 28 "q")
+          (mb 36 "r")
+	  ))
 
 (define data2
   (vector (mb 0 "a")
@@ -86,6 +97,15 @@
           (mb 12 "j")
           (mb 16 "k")
           (mb 20 "l")))
+
+(define data5
+  (vector (mb 0 "a")
+	  (mb 4 "b")
+	  (mb 8 "c")
+	  (mb 0 "d")
+	  (mb 4 "e")
+	  (mb 8 "f")
+	  (mb 12 "g")))
 
 (define (calc-columns members)
   (define (calc-reset-list)
@@ -235,8 +255,20 @@
 (define (get-column-resetters index)
   (vector-ref resetters index))
 
+(define (get-column-head-point index return)
+  (return (get-column-members index)
+	  (get-column-resetters index)))
+
+(define (is-n? members resetters) ;; otherwise is an `h'
+  (and (pair? resetters)
+       (= (get-column-top-offset (car resetters)) (mb-offset (car members)))))
+
+(define (collect-g members resetters)
+  (if (is-n? members resetters)
+      (collect-union members resetters)
+      (collect-struct members resetters)))
+
 (define (collect-struct members resetters)
-  
   (define (make-member-list)
     (call-with-values
         (lambda ()
@@ -246,27 +278,38 @@
       (lambda (collected remain)
         (append collected
                 (list (collect-union remain resetters))))))
-  
+
+  ;; 把collect-union的条件拆到了这里
+  ;; 这样更明显
+  (if (is-n? members resetters)
+      (set! resetters (cdr resetters)))
+
   (if (null? resetters)
       (make-struct members)
       (make-struct (make-member-list))))
 
 (define (collect-union members resetters)
-  (define start-offset (get-column-top-offset (car resetters)))
   (define (make-member-list)
-    (cons (collect-struct members (cdr resetters))
-          ;; ? FIXME: try recurse using column index rather than resetters
-          (let rec ((r resetters))
-            (let* ((next-column-index (car r))
-                   (c2 (get-column next-column-index))
-                   (m2 (get-column-members next-column-index))
-                   (r2 (get-column-resetters next-column-index)))
-              (if (and (pair? r2)
-                       (= (get-column-top-offset (car r2)) start-offset))
-                  (cons (collect-struct m2 (cdr r2))
-                        (rec r2))
-                  (list (collect-struct m2 r2)))))))
+    (let rec ((members members)
+	      (resetters resetters))
+      (cons (collect-struct members resetters)
+	    (if (is-n? members resetters)
+		;; 沿着这列的resetters继续，这会找到reset它的第一列，相当于水平向右平移
+		;; 借助了resetter的传递关系。这一列的第一个resetter→下一列→下一列的第一个resetter→…
+		;; 每列第一个resetter，是最后一个加入的
+		;; 而剩下的resetters，必然属于本struct
+		(get-column-head-point (car resetters) rec)
+		'()))))
   (make-union (make-member-list)))
+
+;; 一个从未被触过的列，它的members和resetters是根据列号就能获取到的
+;; 这启发我们，怎样获得表示列头那一点的ResetPointNode
+
+;; 如何表示ResetPointNode?
+;; (members resetters) --> 是的!交给collect-*函数的参数，正好可以表示ResetPointNode
+;; OR
+;; (column-index member-index resetters)
+;;   resetters甚至可以省略
 
 (define (print x)
   (define (inc-indent s)
@@ -387,6 +430,10 @@
       ;;     part1 = members AND part2 = ()
       (call-with-values
           (lambda ()
+	    ;; 一种可能是，被切的位置恰好最后一项的union中
+	    ;;       或者，被切的位置在最后一项之后
+	    ;; 没办法，只能把切点移动到这一项后
+	    ;; 也就相当于没有切割
             (split-children-at-offset members offset))
         (lambda (part1 part2)
           (values max-bottom-offset
@@ -397,16 +444,30 @@
   (define (postprocess)
     (let rec ((lst (union-members union))
               (max-bottom-offset 0))
+      ;; 传递式的递归分析
+      ;; max-bottom-offset
+      ;;   通过rec --> 传到最后一项的处理，传递时求出前n-1项的最大bottom-offset，用于最后一项的切割
+      ;;   返回 <-- 连带最后一项的，bottom-offset的最大值
+      ;;              而这个值可以是最后一项struct的最后的union处理后的返回结果，同样来自这里
+      ;;                      或者就是struct最后的正常（非union）项之后的offset（最终来自）
+      ;; member <-- 每次积累一项struct，返回时收集
+      ;;              对最后一项，只积累part1
+      ;; members-cut <-- 从最后一项返回
       (let ((first-struct (car lst)))
         (if (null? (cdr lst))
+	    ;; 如果这已经是union的最后一项了
+	    ;; union的最后一项会是可切开的struct
             (call-with-values
                 (lambda ()
+		  ;; 此union之前几项的最大bottom offset
                   (postprocess-struct-with-cut first-struct max-bottom-offset))
               (lambda (max-bottom-offset2 member members-cut)
                 (values (max max-bottom-offset
                              max-bottom-offset2)
-                        (list member)
+                        (list member) ;; 对应切好的struct的part1
                         members-cut)))
+	    ;; 否则，不能切开
+	    ;; 对这个struct进行正常处理，即：对它最后一项的union进行后处理
             (call-with-values
                 (lambda ()
                   (postprocess-struct-without-cut first-struct))
@@ -431,11 +492,11 @@
 ;;   this function won't work specially for last member of the union.
 
 (define (demo-struct-1)
-  (collect-struct (get-column-members 0)
-                  (get-column-resetters 0)))
+  (get-column-head-point 0 collect-g))
 
 (define (demo-struct-2)
   (call-with-values
+      ;; FIXME: demo-struct-1 may be a union
       (lambda () (postprocess-struct-without-cut (demo-struct-1)))
     (lambda (max-bottom-offset struct)
       ;; WARN: `struct' could be ordinary member
