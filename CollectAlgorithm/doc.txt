@@ -1,0 +1,133 @@
+Now we draw line from line top of every column which is higher than the previous, even the prev of prev, to left, until hiting a column higher or parallel.
+
+? reset point
+
+And by doing this, the graph form a tree. The nodes of this tree, in the graph, are all the points have a 90deg angle around them. The Reset Points almost give all of them, others are line top which is not reseted by any column.
+
+ ----+  <-- line top
+     |
+     |
+
+ +      <-- line top
+ |
+ +---+
+
+At the first glance, this is not a tree. We get this illusion, because the `first column' of a sub-tree is in the same line of the `first column' of the parent tree. By shifting them a little left it will be more clear.
+
+        |        <-- a tree node
+        |
+  +---+---+----+
+  |   |   |    |
+
+This seems not a tree also because the concept of `the next sub node' is carried by the sub node itself, instead of a list in the parent node, which could be:
+
+{
+	tag: 'node',
+	data: 1,
+	subNodes: [subNode1, subNode2, ...]
+}
+
+If you know how LIST_ENTRY in windows API works, you may understand this easily.
+
+We can define a tree node as below:
+
+struct TreeNode
+{
+	int columnIndex;
+	int memberIndex; // in a column
+	int data;
+	TreeNode *rightLink; // next node in this level
+	TreeNode *downLink;  // first sub node
+};
+
+Such a tree can be (naturally) transformed into a struct/union nested combination. To demostrate this, I'd like to show you what a tree node in a graph actually means in the responding struct/union structure.
+
+          struct
+        /   |    \
+       m    m   union
+
+           ... (to be continued)
+
+---
+Part II: Cut
+
+[[introduce MBO]]
+
+[[introduce cut]]
+
+We can't present cut in a tree. So let's add new pointer to a TreeNode, representing ?? the concept 'we cut a new tree and graft it just after your sub nodes'. 
+（但是切下之后就要知道，最后一列的members不能算到结尾，只能算到这个新pointer之前？了）
+（在struct/union树图中，这个指针的含义就是，在最后一项的union之后要追加的内容）
+
+Let's see the simpliest cut in the world:
+
+ +             +
+ |             |
+ +---+  ===>   +---+
+ |   |         |   |
+     |         %
+     |         |
+               |
+
+To be honest, given a line graph, there is usually more than one way to do a cut. For the example above, another way is
+
+ +             +
+ |             |
+ +---+  ===>   +---+
+ |   |         |   |
+     |             |
+     |         %
+               |
+
+
+
+But I will introduce some rules that make there is only one way:
+
+1.We can only cut sub-trees defined by the LAST node in all it's parallel nodes.
+
+ a   b   c
+ +---+---+
+ |   |   |
+         |
+         |
+ 
+ (in this graph, the sub-trees of a, b is not cut-able, while those of c is.)
+
+2.The member at a cut point must exactly parallel with the MBO of all parallel non-last nodes.
+When this point is inside a member (e.g. a union), the next member (or the bottom) is selected as the cut point.
+When this point is after all members, the bottom is selected as the cut point.
+In these two exceptions, 'exactly parallel' can be replaced by 'a little below'.
+
+3.Cut from the deepest last node, then one parent above...until get a node which is not the last node in all parallel nodes.
+（这就引出了一些典型情况：多级切
+
+    +
+    |
+    |    +
+         |
+         |    +
+    { <- { <- |
+              
+二段切
+
+    +
+    |
+    |    +
+    |    |
+    |    |    +
+    |    |    |
+    |    {   /|
+    |    { <- |
+    { <- {   \|
+
+多列二段切
+
+    +
+    |
+    |    +
+    |    |
+    {   /|    +
+    {  | |    |
+    { <- {   /|
+    {  | { <- |
+    {   \{   \|

@@ -405,6 +405,7 @@
                 (postprocess-union-with-cut last))
             (lambda (max-bottom-offset union2 members-cut)
               (values max-bottom-offset
+		      ;;
                       (append members
                               (list union2)
                               members-cut))))
