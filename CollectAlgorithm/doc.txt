@@ -55,10 +55,6 @@ Part II: Cut
 
 [[introduce cut]]
 
-We can't present cut in a tree. So let's add new pointer to a TreeNode, representing ?? the concept 'we cut a new tree and graft it just after your sub nodes'. 
-（但是切下之后就要知道，最后一列的members不能算到结尾，只能算到这个新pointer之前？了）
-（在struct/union树图中，这个指针的含义就是，在最后一项的union之后要追加的内容）
-
 Let's see the simpliest cut in the world:
 
  +             +
@@ -69,6 +65,91 @@ Let's see the simpliest cut in the world:
      |         |
                |
 
+# 多级切
+
+    +
+    |
+    |    +
+         |
+         |    +
+    { <- { <- |
+
+除了刚刚这种简单的情况，多级切可以：
+1.在切割中变短
+2.在切割中变长，追加中间列的一部分
+
+    +
+    |
+    |    +
+    |    |
+    |    |    +
+    |    |    |
+    |    {   /|
+    |    { <- |
+    { <- {   \|
+
+    +
+    |
+    |    +
+    |    |
+    {   /|    +
+    {  | |    |
+    { <- {   /|
+    {  | { <- |
+    {   \{   \|
+
+# 切割可以深入到union中
+
+对同一个union的并列几个struct同时来切
+
+以tagged-union为例
+
+   +             +
+   |             |
+   +---+---+ ==> +---+---+
+   |   |   |     |   |   |
+   |   |   |     %
+   |       |     |   |   |
+   |             %
+                 |       |
+                 %
+                 |
+
+（用代码演示切割结果）
+
+一个特殊情况 切割中间的一列
+
+   +             +
+   |             |
+   +---+---+ ==> +---+---+
+   |   |   |     |   |   |
+   |   |         |   |
+       |         %
+                 |
+
+然而在我的方法中，不会深入到union中
+
+我们切到了最后一列，但仍然只是利用它切好后的结果。
+
+This may gives no idea about what CUT really mean internally. So let's show the change in struct/union structure.
+
+...
+
+We can't present cut in a tree. So let's add new pointer to a TreeNode, representing ?? the concept 'we cut a new tree and graft it just after your sub nodes'. 
+（但是切下之后，最后一列的members不能算到结尾。
+可以在Node中增加一项newBottomOffset，用于没有子树的Node
+  此项如为默认值，这一Node一直延续到它所在列的结尾
+  切割后，设置此项为新的结尾，这一Node只会延续到这个值
+）
+（多级切中，一个已经有nextLink的Node node，中间发生了切断，产生了新的Node newNode
+那么需要设置：
+  newNode->nextLink = node->nextLink
+  node->nextLink = NULL
+参考 在切割中变长的多级切
+）
+（在struct/union树图中，这个指针的含义就是，在最后一项的union之后要追加的内容）
+And that's why cut can be hard to understand, because it's about to do manipulation on struct/union structure by making changes on the *tree*.
+
 To be honest, given a line graph, there is usually more than one way to do a cut. For the example above, another way is
 
  +             +
@@ -78,8 +159,6 @@ To be honest, given a line graph, there is usually more than one way to do a cut
      |             |
      |         %
                |
-
-
 
 But I will introduce some rules that make there is only one way:
 
@@ -96,38 +175,65 @@ But I will introduce some rules that make there is only one way:
 2.The member at a cut point must exactly parallel with the MBO of all parallel non-last nodes.
 When this point is inside a member (e.g. a union), the next member (or the bottom) is selected as the cut point.
 When this point is after all members, the bottom is selected as the cut point.
-In these two exceptions, 'exactly parallel' can be replaced by 'a little below'.
+In these two exceptions, 'exactly parallel' can be replaced by 'a little below'. (?or no member at all)
 
-3.Cut from the deepest last node, then one parent above...until get a node which is not the last node in all parallel nodes.
-（这就引出了一些典型情况：多级切
+补充一个When:
+在tagged-union中，最后一列线并不总是连的，而这种做法恰好能通过这一点
 
-    +
-    |
-    |    +
+ +
+ |
+ +---+---+
+ |   |   |
+ |   |
+     |
          |
-         |    +
-    { <- { <- |
-              
-二段切
+         |
 
-    +
-    |
-    |    +
-    |    |
-    |    |    +
-    |    |    |
-    |    {   /|
-    |    { <- |
-    { <- {   \|
+3.Cut from
+ the deepest last node, then one parent above...until get a node which is not the last node in all parallel nodes.
+Cut to the immediate parent in one step. 展示如何在line graph上找到parent节点：一直向左，然后向上走一个点。
 
-多列二段切
+（By 'deepest', I mean 不是整棵tree上的某个节点。一棵tree上可能有很多这样的节点，它们的共性是没有子节点（downLink==NULL）
+问题：这些节点的处理有先后顺序吗，还是可以并行处理
+可以并行处理，同级内只有最后一棵树需要向上再切
+ +
+ |
+ +------+------+
+ |      |      |
+ +---+  +---+  +---+
+ |   |  |   |  |   |
+     |      |      |
+                   |
 
-    +
-    |
-    |    +
-    |    |
-    {   /|    +
-    {  | |    |
-    { <- {   /|
-    {  | { <- |
-    {   \{   \|
+        ↓
+ +
+ |
+ +------+------+ <----- 只有最后一列需要上切
+ |      |      |        这是一种屏障，只允许最后一列切下来的部分通过
+ +---+  +---+  +---+
+ |   |  |   |  |   |
+ {<- |  {<- |  {<- |
+               {   |
+
+        ↓
+ +
+ |
+ +------+------+
+ |      |      |
+ +---+  +---+  +---+
+ |   |  |   |  |   |
+ {      {      {
+ {  <--------  |
+
+        ↓
+ +
+ |
+ +------+------+
+ |      |      |
+ +---+  +---+  +---+
+ |   |  |   |  |   |
+ {      {      {
+ {
+）
+
++ nextLink与child nodes的MBO可能还差一些，通过这个差可得所需的padding
