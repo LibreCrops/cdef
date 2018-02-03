@@ -1,6 +1,6 @@
 usage: PdbReader action file [args]
 
 actions:
-list    output types list
-xml     output xml data
-def     output type definitions
+list /path/to/pdb/file                            output types list
+xml  /path/to/pdb/file                            output xml data
+def  /path/to/pdb/file typename [typename ...]    output type definitions
