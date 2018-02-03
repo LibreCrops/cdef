@@ -1,12 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Dia2Lib;
-using PdbReader.Collect;
-using PdbReader.Types;
-using PdbReader.Defs;
-using PdbReader.Xml;
+
 
 namespace PdbReader
 {
@@ -14,7 +7,7 @@ namespace PdbReader
     {
         static void Main(string[] args)
         {
-            new App(args).Run();
+            Environment.Exit(new App(args).Run());
         }
     }
 }
