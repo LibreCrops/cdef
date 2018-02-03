@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Runtime.InteropServices;
+using PdbReader.DiaExtra;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -48,15 +50,26 @@ namespace PdbReader
             {
                 _pdb = Pdb.Load(_args[1]);
             }
-            catch (PdbNotFoundException)
+            catch (COMException ex)
             {
-                WriteError("file not found: " + _args[1]);
+                if (ex.ErrorCode == ErrorCodes.REGDB_E_CLASSNOTREG)
+                {
+                    WriteError("DIA is not registered! You can register it with something like ``regsvr32 /path/to/msdia100.dll``.");
+                }
+                else if (ex.ErrorCode == ErrorCodes.E_PDB_FORMAT)
+                {
+                    WriteError("wrong pdb format: " + _args[1]);
+                }
+                else if (ex.ErrorCode == ErrorCodes.E_PDB_NOT_FOUND)
+                {
+                    WriteError("file not found: " + _args[1]);
+                }
+                else
+                {
+                    WriteError("COMException: " + ex.Message);
+                    WriteError("ErrorCode: " + ex.ErrorCode.ToString("X"));
+                }
                 return 1;
-            }
-            catch (PdbFormatException)
-            {
-                WriteError("wrong pdb format: " + _args[1]);
-                return 2;
             }
 
             try

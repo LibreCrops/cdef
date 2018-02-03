@@ -75,8 +75,6 @@
     <Compile Include="IntTypePair.cs" />
     <Compile Include="IntTypePairs.cs" />
     <Compile Include="Pdb.cs" />
-    <Compile Include="PdbFormatException.cs" />
-    <Compile Include="PdbNotFoundException.cs" />
     <Compile Include="PdbSymbol.cs" />
     <Compile Include="PdbSymbolType.cs" />
     <Compile Include="PdbSymbolTypes.cs" />

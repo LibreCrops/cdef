@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Runtime.InteropServices;
 using Dia2Lib;
 using PdbReader.DiaExtra;
 
@@ -101,26 +100,10 @@ namespace PdbReader
         {
             IDiaSession session;
             IDiaSymbol global;
-            try
-            {
-                IDiaDataSource source = new DiaSource();
-                source.loadDataFromPdb(path);
-                source.openSession(out session);
-                global = session.globalScope;
-            }
-            catch (COMException ex)
-            {
-                if (ex.ErrorCode == ErrorCodes.E_PDB_FORMAT)
-                {
-                    throw new PdbFormatException();
-                }
-                else
-                {
-                    Console.WriteLine(ex.Message);
-                    Environment.Exit(1);
-                    throw new PdbNotFoundException();
-                }
-            }
+            IDiaDataSource source = new DiaSource();
+            source.loadDataFromPdb(path);
+            source.openSession(out session);
+            global = session.globalScope;
             return global;
         }
 
