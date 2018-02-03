@@ -33,18 +33,23 @@ namespace PdbReader
             if (_args.Length == 0)
             {
                 MainHelp();
-                return 0;
+                return 1;
             }
             _action = AppActions.LookUp(_args[0]);
             if (_action == null)
             {
                 WriteError("unknown action: " + _args[0]);
-                return 0;
+                return 1;
             }
             if (_args.Length == 1)
             {
                 WriteError("need file path");
-                return 0;
+                return 1;
+            }
+            if (_args[0] == "def" && _args.Length <= 2)
+            {
+                WriteError("``def`` subcommand requires type names!");
+                return 1;
             }
             try
             {
