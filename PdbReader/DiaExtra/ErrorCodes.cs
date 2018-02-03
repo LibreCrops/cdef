@@ -7,7 +7,8 @@ namespace PdbReader.DiaExtra
 {
     class ErrorCodes
     {
-        public static uint E_PDB_NOT_FOUND = 0x806D0005;
-        public static uint E_PDB_FORMAT = 0x806D000C;
+        public static int E_PDB_NOT_FOUND = unchecked((int)0x806D0005);
+        public static int E_PDB_FORMAT = unchecked((int)0x806D000C);
+        public static int REGDB_E_CLASSNOTREG = unchecked((int)0x80040154);
     }
 }
